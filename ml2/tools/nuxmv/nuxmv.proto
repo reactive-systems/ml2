@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+import "ml2/tools/protos/ltl.proto";
+
+message Problem {
+    LTLSpecification specification = 1;
+    string system = 2;
+    bool realizable = 3;
+    float timeout = 4;
+}
+
+message Solution {
+    enum Status {
+        SATISFIED = 0;
+        VIOLATED = 1;
+        INVALID = 2;
+        TIMEOUT = 3;
+        ERROR = 4;
+    }
+    Status status = 1;
+}
+
+service nuXmv {
+    rpc ModelCheck(Problem) returns (Solution) {}
+    rpc ModelCheckStream(stream Problem) returns (stream Solution) {}
+}

@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "ml2/tools/protos/ltl.proto";
+
+message BoSyProblem {
+    LTLSpecification specification = 1;
+    bool optimize = 2;
+    float timeout = 3;
+}
+
+message BoSySolution {
+    string status = 1;
+    string system = 2;
+}
+
+service BoSy {
+    rpc Synthesize(BoSyProblem) returns (BoSySolution) {}
+    rpc SynthesizeStream(stream BoSyProblem) returns (stream BoSySolution) {}
+}

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+message LTLSatProblem {
+    string formula = 1;
+    float timeout = 2;
+}
+
+message LTLSatSolution {
+    string status = 1;
+    string trace = 2;
+}
+
+message LTLSpecification {
+    repeated string inputs = 1;
+    repeated string outputs = 2;
+    repeated string guarantees = 3;
+    repeated string assumptions = 4;
+}
