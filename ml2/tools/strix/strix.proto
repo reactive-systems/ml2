@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "ml2/tools/protos/ltl.proto";
+
+message StrixProblem {
+    LTLSpecification specification = 1;
+    bool minimize_aiger = 2;
+    bool minimize_mealy = 3;
+    int32 threads = 4;
+    float timeout = 5;
+}
+
+message StrixSolution {
+    string status = 1;
+    string system = 2;
+}
+
+service Strix {
+    rpc Synthesize(StrixProblem) returns (StrixSolution) {}
+    rpc SynthesizeStream(stream StrixProblem) returns (stream StrixSolution) {}
+}
