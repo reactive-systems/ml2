@@ -18,7 +18,6 @@ class TransformerSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
 
     def __call__(self, step):
         step = tf.cast(step, tf.float32)
-        increasing_lr = step * (self.warmup_steps**-1.5)
+        increasing_lr = step * (self.warmup_steps ** -1.5)
         decreasing_lr = tf.math.rsqrt(step)
-        return tf.math.rsqrt(self.d_embedding) * tf.math.minimum(
-            increasing_lr, decreasing_lr)
+        return tf.math.rsqrt(self.d_embedding) * tf.math.minimum(increasing_lr, decreasing_lr)

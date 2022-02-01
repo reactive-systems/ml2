@@ -3,11 +3,7 @@
 import tensorflow as tf
 
 
-def scaled_dot_product_attention(queries,
-                                 keys,
-                                 values,
-                                 mask=None,
-                                 dtype=tf.float32):
+def scaled_dot_product_attention(queries, keys, values, mask=None, dtype=tf.float32):
     """
     Args:
         queries: (..., num_queries, d_queries)
@@ -18,8 +14,7 @@ def scaled_dot_product_attention(queries,
         attention: (..., num_queries, d_values)
         attention_weights: (..., num_queries, num_keys)
     """
-    attention_logits = tf.matmul(
-        queries, keys, transpose_b=True)  # (..., num_queries, num_keys)
+    attention_logits = tf.matmul(queries, keys, transpose_b=True)  # (..., num_queries, num_keys)
 
     # scale by square root of d_queries
     d_queries = tf.cast(tf.shape(queries)[-1], dtype)
@@ -27,18 +22,17 @@ def scaled_dot_product_attention(queries,
 
     # mask scaled values
     if mask is not None:
-        scaled_attention_logits += (mask * dtype.min)
+        scaled_attention_logits += mask * dtype.min
 
     # perform softmax over key axis and multiply resulting attention weights with values
-    attention_weights = tf.nn.softmax(scaled_attention_logits,
-                                      axis=-1)  # (..., num_queries, num_keys)
-    attention = tf.matmul(attention_weights,
-                          values)  # (..., num_queries, d_values)
+    attention_weights = tf.nn.softmax(
+        scaled_attention_logits, axis=-1
+    )  # (..., num_queries, num_keys)
+    attention = tf.matmul(attention_weights, values)  # (..., num_queries, d_values)
     return attention, attention_weights
 
 
 class MultiHeadAttention(tf.keras.layers.Layer):
-
     def __init__(self, d_embedding, num_heads):
 
         if d_embedding % num_heads != 0:
@@ -70,8 +64,7 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         Returns:
             (batch_size, num_heads, num_inputs, d_heads)
         """
-        input = tf.reshape(input,
-                           (batch_size, -1, self.num_heads, self.d_heads))
+        input = tf.reshape(input, (batch_size, -1, self.num_heads, self.d_heads))
         return tf.transpose(input, perm=[0, 2, 1, 3])
 
     def call(self, queries, keys, values, mask=None, cache=None):
@@ -96,47 +89,41 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         values = self.V(values)
 
         queries = self.split_heads(
-            queries,
-            batch_size)  # (batch_size, num_heads, num_queries, d_heads)
-        keys = self.split_heads(
-            keys, batch_size)  # (batch_size, num_heads, num_keys, d_heads)
-        values = self.split_heads(
-            values, batch_size)  # (batch_size, num_heads, num_keys, d_heads)
+            queries, batch_size
+        )  # (batch_size, num_heads, num_queries, d_heads)
+        keys = self.split_heads(keys, batch_size)  # (batch_size, num_heads, num_keys, d_heads)
+        values = self.split_heads(values, batch_size)  # (batch_size, num_heads, num_keys, d_heads)
 
         if cache is not None:
             # TODO get rid of permutations
             # concatenate cached keys and values
-            keys = tf.concat([
-                tf.cast(tf.transpose(cache['keys'], perm=[0, 2, 1, 3]),
-                        keys.dtype), keys
-            ],
-                             axis=2)
-            values = tf.concat([
-                tf.cast(tf.transpose(cache['values'], perm=[0, 2, 1, 3]),
-                        values.dtype), values
-            ],
-                               axis=2)
+            keys = tf.concat(
+                [tf.cast(tf.transpose(cache["keys"], perm=[0, 2, 1, 3]), keys.dtype), keys], axis=2
+            )
+            values = tf.concat(
+                [tf.cast(tf.transpose(cache["values"], perm=[0, 2, 1, 3]), values.dtype), values],
+                axis=2,
+            )
             # update cache
-            cache['keys'] = tf.transpose(keys, perm=[0, 2, 1, 3])
-            cache['values'] = tf.transpose(values, perm=[0, 2, 1, 3])
+            cache["keys"] = tf.transpose(keys, perm=[0, 2, 1, 3])
+            cache["values"] = tf.transpose(values, perm=[0, 2, 1, 3])
 
         scaled_attention, attention_weights = scaled_dot_product_attention(
             queries, keys, values, mask
         )  # (batch_size, num_heads, num_queries, d_heads) (batch_size, num_heads, num_queries, num_keys)
         scaled_attention = tf.transpose(
-            scaled_attention,
-            perm=[0, 2, 1, 3])  # (batch_size, num_queries, num_heads, d_heads)
+            scaled_attention, perm=[0, 2, 1, 3]
+        )  # (batch_size, num_queries, num_heads, d_heads)
         concat_attention = tf.reshape(
-            scaled_attention,
-            (batch_size, -1,
-             self.d_embedding))  # (batch_size, num_queries, d_embedding)
+            scaled_attention, (batch_size, -1, self.d_embedding)
+        )  # (batch_size, num_queries, d_embedding)
         attention = self.final_projection(
-            concat_attention)  # (batch_size, num_queries, d_embedding)
+            concat_attention
+        )  # (batch_size, num_queries, d_embedding)
         return attention, attention_weights
 
 
 class SimpleMultNormAttention(tf.keras.layers.Layer):
-
     def __init__(self, units_size):
         super(SimpleMultNormAttention, self).__init__()
         self.units_size = units_size
@@ -149,12 +136,10 @@ class SimpleMultNormAttention(tf.keras.layers.Layer):
 
         y_scaled = self.W(values)
         score = query_expanded * y_scaled
-        score = tf.reduce_sum(score, axis=2,
-                              keepdims=True)  # (batch_size, seq_len)
+        score = tf.reduce_sum(score, axis=2, keepdims=True)  # (batch_size, seq_len)
         score /= tf.sqrt(tf.constant(self.units_size, dtype=tf.float32))
         weights = tf.nn.softmax(score, axis=1)
 
         context_vector = weights * values  # (batch_size, seq_len, units_size)
-        context_vector = tf.reduce_sum(context_vector,
-                                       axis=1)  # (batch_size, units_size)
+        context_vector = tf.reduce_sum(context_vector, axis=1)  # (batch_size, units_size)
         return context_vector, weights

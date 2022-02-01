@@ -133,3 +133,10 @@ dmypy.json
 
 #Weights and Biases
 wandb
+
+#VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/extensions.json
+*.code-workspace

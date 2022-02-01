@@ -1,4 +1,7 @@
-FROM projects.cispa.saarland:5005/group-finkbeiner/tools/ml2/bosy
+ARG CONTAINER_REGISTRY=ghrc.io/reactive-systems/ml2
+
+FROM $CONTAINER_REGISTRY/bosy
+
 ARG PYTHON_VERSION=3.8.8
 
 RUN apt-get -q update && \

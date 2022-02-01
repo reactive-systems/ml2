@@ -4,8 +4,8 @@ import enum
 
 
 class LTLMCStatus(enum.Enum):
-    SATISFIED = 'satisfied'
-    VIOLATED = 'violated'
-    INVALID = 'invalid'
-    TIMEOUT = 'timeout'
-    ERROR = 'error'
+    SATISFIED = "satisfied"
+    VIOLATED = "violated"
+    INVALID = "invalid"
+    TIMEOUT = "timeout"
+    ERROR = "error"

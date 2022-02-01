@@ -10,39 +10,38 @@ class LTLPrefixParser(sly.Parser):
 
     tokens = LTLPrefixLexer.tokens
     precedence = (
-        ('right', EQUIV, IMPL),
-        ('left', XOR),
-        ('left', OR),
-        ('left', AND),
-        ('right', UNTIL, WUNTIL, RELEASE),
-        ('right', EVEN, GLOB),
-        ('right', NEXT),
-        ('right', NOT),
+        ("right", EQUIV, IMPL),
+        ("left", XOR),
+        ("left", OR),
+        ("left", AND),
+        ("right", UNTIL, WUNTIL, RELEASE),
+        ("right", EVEN, GLOB),
+        ("right", NEXT),
+        ("right", NOT),
     )
 
-    @_('EQUIV expr expr',
-       'IMPL expr expr',
-       'XOR expr expr',
-       'OR expr expr',
-       'AND expr expr',
-       'UNTIL expr expr',
-       'WUNTIL expr expr',
-       'RELEASE expr expr')
+    @_(
+        "EQUIV expr expr",
+        "IMPL expr expr",
+        "XOR expr expr",
+        "OR expr expr",
+        "AND expr expr",
+        "UNTIL expr expr",
+        "WUNTIL expr expr",
+        "RELEASE expr expr",
+    )
     def expr(self, p):
         return BinaryAST(p[0], p.expr0, p.expr1)
 
-    @_('EVEN expr',
-       'GLOB expr',
-       'NEXT expr',
-       'NOT expr')
+    @_("EVEN expr", "GLOB expr", "NEXT expr", "NOT expr")
     def expr(self, p):
         return BinaryAST(p[0], p.expr)
 
-    @_('CONST')
+    @_("CONST")
     def expr(self, p):
         return BinaryAST(p.CONST)
 
-    @_('AP')
+    @_("AP")
     def expr(self, p):
         return BinaryAST(p.AP)
 
@@ -54,43 +53,42 @@ class LTLInfixParser(sly.Parser):
 
     tokens = LTLInfixLexer.tokens
     precedence = (
-        ('right', EQUIV, IMPL),
-        ('left', XOR),
-        ('left', OR),
-        ('left', AND),
-        ('right', UNTIL, WUNTIL, RELEASE),
-        ('right', EVEN, GLOB),
-        ('right', NEXT),
-        ('right', NOT),
+        ("right", EQUIV, IMPL),
+        ("left", XOR),
+        ("left", OR),
+        ("left", AND),
+        ("right", UNTIL, WUNTIL, RELEASE),
+        ("right", EVEN, GLOB),
+        ("right", NEXT),
+        ("right", NOT),
     )
 
-    @_('expr EQUIV expr',
-       'expr IMPL expr',
-       'expr XOR expr',
-       'expr OR expr',
-       'expr AND expr',
-       'expr UNTIL expr',
-       'expr WUNTIL expr',
-       'expr RELEASE expr')
+    @_(
+        "expr EQUIV expr",
+        "expr IMPL expr",
+        "expr XOR expr",
+        "expr OR expr",
+        "expr AND expr",
+        "expr UNTIL expr",
+        "expr WUNTIL expr",
+        "expr RELEASE expr",
+    )
     def expr(self, p):
         return BinaryAST(p[1], p.expr0, p.expr1)
 
-    @_('EVEN expr',
-       'GLOB expr',
-       'NEXT expr',
-       'NOT expr')
+    @_("EVEN expr", "GLOB expr", "NEXT expr", "NOT expr")
     def expr(self, p):
         return BinaryAST(p[0], p.expr)
 
-    @_('LPAR expr RPAR')
+    @_("LPAR expr RPAR")
     def expr(self, p):
         return p.expr
 
-    @_('CONST')
+    @_("CONST")
     def expr(self, p):
         return BinaryAST(p.CONST)
 
-    @_('AP')
+    @_("AP")
     def expr(self, p):
         return BinaryAST(p.AP)
 

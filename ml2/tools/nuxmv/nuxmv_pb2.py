@@ -6,208 +6,284 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
+
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
-
 from ml2.tools.protos import ltl_pb2 as ml2_dot_tools_dot_protos_dot_ltl__pb2
 
-
 DESCRIPTOR = _descriptor.FileDescriptor(
-  name='ml2/tools/nuxmv/nuxmv.proto',
-  package='',
-  syntax='proto3',
-  serialized_options=None,
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x1bml2/tools/nuxmv/nuxmv.proto\x1a\x1aml2/tools/protos/ltl.proto\"h\n\x07Problem\x12(\n\rspecification\x18\x01 \x01(\x0b\x32\x11.LTLSpecification\x12\x0e\n\x06system\x18\x02 \x01(\t\x12\x12\n\nrealizable\x18\x03 \x01(\x08\x12\x0f\n\x07timeout\x18\x04 \x01(\x02\"x\n\x08Solution\x12 \n\x06status\x18\x01 \x01(\x0e\x32\x10.Solution.Status\"J\n\x06Status\x12\r\n\tSATISFIED\x10\x00\x12\x0c\n\x08VIOLATED\x10\x01\x12\x0b\n\x07INVALID\x10\x02\x12\x0b\n\x07TIMEOUT\x10\x03\x12\t\n\x05\x45RROR\x10\x04\x32[\n\x05nuXmv\x12#\n\nModelCheck\x12\x08.Problem\x1a\t.Solution\"\x00\x12-\n\x10ModelCheckStream\x12\x08.Problem\x1a\t.Solution\"\x00(\x01\x30\x01\x62\x06proto3'
-  ,
-  dependencies=[ml2_dot_tools_dot_protos_dot_ltl__pb2.DESCRIPTOR,])
-
-
+    name="ml2/tools/nuxmv/nuxmv.proto",
+    package="",
+    syntax="proto3",
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+    serialized_pb=b'\n\x1bml2/tools/nuxmv/nuxmv.proto\x1a\x1aml2/tools/protos/ltl.proto"h\n\x07Problem\x12(\n\rspecification\x18\x01 \x01(\x0b\x32\x11.LTLSpecification\x12\x0e\n\x06system\x18\x02 \x01(\t\x12\x12\n\nrealizable\x18\x03 \x01(\x08\x12\x0f\n\x07timeout\x18\x04 \x01(\x02"x\n\x08Solution\x12 \n\x06status\x18\x01 \x01(\x0e\x32\x10.Solution.Status"J\n\x06Status\x12\r\n\tSATISFIED\x10\x00\x12\x0c\n\x08VIOLATED\x10\x01\x12\x0b\n\x07INVALID\x10\x02\x12\x0b\n\x07TIMEOUT\x10\x03\x12\t\n\x05\x45RROR\x10\x04\x32[\n\x05nuXmv\x12#\n\nModelCheck\x12\x08.Problem\x1a\t.Solution"\x00\x12-\n\x10ModelCheckStream\x12\x08.Problem\x1a\t.Solution"\x00(\x01\x30\x01\x62\x06proto3',
+    dependencies=[
+        ml2_dot_tools_dot_protos_dot_ltl__pb2.DESCRIPTOR,
+    ],
+)
 
 _SOLUTION_STATUS = _descriptor.EnumDescriptor(
-  name='Status',
-  full_name='Solution.Status',
-  filename=None,
-  file=DESCRIPTOR,
-  create_key=_descriptor._internal_create_key,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='SATISFIED', index=0, number=0,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='VIOLATED', index=1, number=1,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='INVALID', index=2, number=2,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='TIMEOUT', index=3, number=3,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='ERROR', index=4, number=4,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=211,
-  serialized_end=285,
+    name="Status",
+    full_name="Solution.Status",
+    filename=None,
+    file=DESCRIPTOR,
+    create_key=_descriptor._internal_create_key,
+    values=[
+        _descriptor.EnumValueDescriptor(
+            name="SATISFIED",
+            index=0,
+            number=0,
+            serialized_options=None,
+            type=None,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="VIOLATED",
+            index=1,
+            number=1,
+            serialized_options=None,
+            type=None,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="INVALID",
+            index=2,
+            number=2,
+            serialized_options=None,
+            type=None,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="TIMEOUT",
+            index=3,
+            number=3,
+            serialized_options=None,
+            type=None,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="ERROR",
+            index=4,
+            number=4,
+            serialized_options=None,
+            type=None,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    containing_type=None,
+    serialized_options=None,
+    serialized_start=211,
+    serialized_end=285,
 )
 _sym_db.RegisterEnumDescriptor(_SOLUTION_STATUS)
 
-
 _PROBLEM = _descriptor.Descriptor(
-  name='Problem',
-  full_name='Problem',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='specification', full_name='Problem.specification', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='system', full_name='Problem.system', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='realizable', full_name='Problem.realizable', index=2,
-      number=3, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='timeout', full_name='Problem.timeout', index=3,
-      number=4, type=2, cpp_type=6, label=1,
-      has_default_value=False, default_value=float(0),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=59,
-  serialized_end=163,
+    name="Problem",
+    full_name="Problem",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="specification",
+            full_name="Problem.specification",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="system",
+            full_name="Problem.system",
+            index=1,
+            number=2,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="realizable",
+            full_name="Problem.realizable",
+            index=2,
+            number=3,
+            type=8,
+            cpp_type=7,
+            label=1,
+            has_default_value=False,
+            default_value=False,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="timeout",
+            full_name="Problem.timeout",
+            index=3,
+            number=4,
+            type=2,
+            cpp_type=6,
+            label=1,
+            has_default_value=False,
+            default_value=float(0),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=59,
+    serialized_end=163,
 )
-
 
 _SOLUTION = _descriptor.Descriptor(
-  name='Solution',
-  full_name='Solution',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='status', full_name='Solution.status', index=0,
-      number=1, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-    _SOLUTION_STATUS,
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=165,
-  serialized_end=285,
+    name="Solution",
+    full_name="Solution",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="status",
+            full_name="Solution.status",
+            index=0,
+            number=1,
+            type=14,
+            cpp_type=8,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[
+        _SOLUTION_STATUS,
+    ],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=165,
+    serialized_end=285,
 )
 
-_PROBLEM.fields_by_name['specification'].message_type = ml2_dot_tools_dot_protos_dot_ltl__pb2._LTLSPECIFICATION
-_SOLUTION.fields_by_name['status'].enum_type = _SOLUTION_STATUS
+_PROBLEM.fields_by_name[
+    "specification"
+].message_type = ml2_dot_tools_dot_protos_dot_ltl__pb2._LTLSPECIFICATION
+_SOLUTION.fields_by_name["status"].enum_type = _SOLUTION_STATUS
 _SOLUTION_STATUS.containing_type = _SOLUTION
-DESCRIPTOR.message_types_by_name['Problem'] = _PROBLEM
-DESCRIPTOR.message_types_by_name['Solution'] = _SOLUTION
+DESCRIPTOR.message_types_by_name["Problem"] = _PROBLEM
+DESCRIPTOR.message_types_by_name["Solution"] = _SOLUTION
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-Problem = _reflection.GeneratedProtocolMessageType('Problem', (_message.Message,), {
-  'DESCRIPTOR' : _PROBLEM,
-  '__module__' : 'ml2.tools.nuxmv.nuxmv_pb2'
-  # @@protoc_insertion_point(class_scope:Problem)
-  })
+Problem = _reflection.GeneratedProtocolMessageType(
+    "Problem",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _PROBLEM,
+        "__module__": "ml2.tools.nuxmv.nuxmv_pb2"
+        # @@protoc_insertion_point(class_scope:Problem)
+    },
+)
 _sym_db.RegisterMessage(Problem)
 
-Solution = _reflection.GeneratedProtocolMessageType('Solution', (_message.Message,), {
-  'DESCRIPTOR' : _SOLUTION,
-  '__module__' : 'ml2.tools.nuxmv.nuxmv_pb2'
-  # @@protoc_insertion_point(class_scope:Solution)
-  })
+Solution = _reflection.GeneratedProtocolMessageType(
+    "Solution",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _SOLUTION,
+        "__module__": "ml2.tools.nuxmv.nuxmv_pb2"
+        # @@protoc_insertion_point(class_scope:Solution)
+    },
+)
 _sym_db.RegisterMessage(Solution)
 
-
-
 _NUXMV = _descriptor.ServiceDescriptor(
-  name='nuXmv',
-  full_name='nuXmv',
-  file=DESCRIPTOR,
-  index=0,
-  serialized_options=None,
-  create_key=_descriptor._internal_create_key,
-  serialized_start=287,
-  serialized_end=378,
-  methods=[
-  _descriptor.MethodDescriptor(
-    name='ModelCheck',
-    full_name='nuXmv.ModelCheck',
+    name="nuXmv",
+    full_name="nuXmv",
+    file=DESCRIPTOR,
     index=0,
-    containing_service=None,
-    input_type=_PROBLEM,
-    output_type=_SOLUTION,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
-  ),
-  _descriptor.MethodDescriptor(
-    name='ModelCheckStream',
-    full_name='nuXmv.ModelCheckStream',
-    index=1,
-    containing_service=None,
-    input_type=_PROBLEM,
-    output_type=_SOLUTION,
-    serialized_options=None,
-    create_key=_descriptor._internal_create_key,
-  ),
-])
+    serialized_start=287,
+    serialized_end=378,
+    methods=[
+        _descriptor.MethodDescriptor(
+            name="ModelCheck",
+            full_name="nuXmv.ModelCheck",
+            index=0,
+            containing_service=None,
+            input_type=_PROBLEM,
+            output_type=_SOLUTION,
+            serialized_options=None,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.MethodDescriptor(
+            name="ModelCheckStream",
+            full_name="nuXmv.ModelCheckStream",
+            index=1,
+            containing_service=None,
+            input_type=_PROBLEM,
+            output_type=_SOLUTION,
+            serialized_options=None,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+)
 _sym_db.RegisterServiceDescriptor(_NUXMV)
 
-DESCRIPTOR.services_by_name['nuXmv'] = _NUXMV
+DESCRIPTOR.services_by_name["nuXmv"] = _NUXMV
 
 # @@protoc_insertion_point(module_scope)

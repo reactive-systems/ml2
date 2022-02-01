@@ -1,37 +1,38 @@
 """Abstract encoder class"""
 
-START_TOKEN = '<s>'
-EOS_TOKEN = '<e>'
-PAD_TOKEN = '<p>'
+from typing import Generator, List
+
+START_TOKEN = "<s>"
+EOS_TOKEN = "<e>"
+PAD_TOKEN = "<p>"
 
 
-class Encoder():
-
+class Encoder:
     def __init__(self):
         self.tokens = None
         self.ids = None
         self.error = None
 
-    def tokenize(self):
+    def tokenize(self) -> bool:
         raise NotImplementedError
 
-    def detokenize(self):
+    def detokenize(self) -> bool:
         raise NotImplementedError
 
-    def encode(self, input):
+    def encode(self, input) -> bool:
         raise NotImplementedError
 
-    def decode(self, ids):
+    def decode(self, ids: List[int]) -> bool:
         raise NotImplementedError
 
-    def load_vocabulary(self, dir):
+    def load_vocabulary(self, dir: str) -> bool:
         raise NotImplementedError
 
-    def build_vocabulary(self, generator):
+    def build_vocabulary(self, generator: Generator) -> None:
         raise NotImplementedError
 
-    def vocabulary_to_file(self, dir):
+    def vocabulary_to_file(self, dir: str) -> None:
         raise NotImplementedError
 
-    def vocabulary_filename(self):
+    def vocabulary_filename(self) -> str:
         raise NotImplementedError

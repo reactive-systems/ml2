@@ -1,13 +1,12 @@
-"""AIGER circuit class based on
-https://github.com/mvcisback/py-aiger/blob/main/aiger/parser.py"""
+"""AIGER circuit class based on https://github.com/mvcisback/py-aiger/blob/main/aiger/parser.py"""
 
 import re
 
 
 class Header:
-
-    def __init__(self, max_var_id: int, num_inputs: int, num_latches: int,
-                 num_outputs: int, num_ands: int):
+    def __init__(
+        self, max_var_id: int, num_inputs: int, num_latches: int, num_outputs: int, num_ands: int
+    ):
         self.max_var_id = max_var_id
         self.num_inputs = num_inputs
         self.num_latches = num_latches
@@ -15,33 +14,32 @@ class Header:
         self.num_ands = num_ands
 
     def __str__(self):
-        return f'aag {self.max_var_id} {self.num_inputs} {self.num_latches} ' \
-        f'{self.num_outputs} {self.num_ands}'
+        return (
+            f"aag {self.max_var_id} {self.num_inputs} {self.num_latches} "
+            f"{self.num_outputs} {self.num_ands}"
+        )
 
 
 class Latch:
-
     def __init__(self, lit: int, next_lit: int):
         self.lit = lit
         self.next_lit = next_lit
 
     def __str__(self):
-        return f'{self.lit} {self.next_lit}'
+        return f"{self.lit} {self.next_lit}"
 
 
 class And:
-
     def __init__(self, lit: int, arg1: int, arg2: int):
         self.lit = lit
         self.arg1 = arg1
         self.arg2 = arg2
 
     def __str__(self):
-        return f'{self.lit} {self.arg1} {self.arg2}'
+        return f"{self.lit} {self.arg1} {self.arg2}"
 
 
 class Symbol:
-
     def __init__(
         self,
         kind: str,
@@ -53,19 +51,20 @@ class Symbol:
         self.name = name
 
     def __str__(self):
-        return f'{self.kind}{self.idx} {self.name}'
+        return f"{self.kind}{self.idx} {self.name}"
 
 
 class Circuit:
-
-    def __init__(self,
-                 header=None,
-                 inputs=None,
-                 latches=None,
-                 outputs=None,
-                 ands=None,
-                 symbols=None,
-                 comments=None):
+    def __init__(
+        self,
+        header=None,
+        inputs=None,
+        latches=None,
+        outputs=None,
+        ands=None,
+        symbols=None,
+        comments=None,
+    ):
         self.header = header
         self.inputs = inputs if inputs else []
         self.latches = latches if latches else []
@@ -123,12 +122,20 @@ class Circuit:
         return None
 
     def __str__(self):
-        return '\n'.join([
-            str(x) for x in [
-                self.header, *self.inputs, *self.latches, *self.outputs,
-                *self.ands, *self.symbols, *self.comments
+        return "\n".join(
+            [
+                str(x)
+                for x in [
+                    self.header,
+                    *self.inputs,
+                    *self.latches,
+                    *self.outputs,
+                    *self.ands,
+                    *self.symbols,
+                    *self.comments,
+                ]
             ]
-        ])
+        )
 
 
 HEADER_PATTERN = re.compile(r"aag (\d+) (\d+) (\d+) (\d+) (\d+)")
@@ -153,11 +160,10 @@ def parse_header(line, state):
                 "Sum of number of inputs, latches and ands is greater than max variable index"
             )
 
-        state.header = Header(max_var_id, num_inputs, num_latches, num_outputs,
-                              num_ands)
+        state.header = Header(max_var_id, num_inputs, num_latches, num_outputs, num_ands)
 
     except ValueError as exc:
-        raise ValueError('Failed to parse aag header') from exc
+        raise ValueError("Failed to parse aag header") from exc
     return True
 
 
@@ -192,7 +198,7 @@ def parse_latch(line, state):
     match = LATCH_PATTERN.fullmatch(line)
     if not match:
         if state.header.num_latches:
-            raise ValueError(f'Expecting a latch: {line}')
+            raise ValueError(f"Expecting a latch: {line}")
         return False
 
     groups = match.groups()
@@ -213,7 +219,7 @@ def parse_and(line, state):
     match = AND_PATTERN.fullmatch(line)
     if not match:
         if state.header.num_ands:
-            raise ValueError(f'Expecting an and: {line}')
+            raise ValueError(f"Expecting an and: {line}")
         return False
 
     groups = match.groups()
@@ -240,28 +246,26 @@ def parse_symbol(line, state):
 def parse_comment(line, state):
     if state.comments:
         state.comments.append(line.restrip())
-    elif line.rstrip() == 'c':
+    elif line.rstrip() == "c":
         state.comments = []
     else:
         return False
     return True
 
 
-DEFAULT_COMPONENTS = [
-    'header', 'inputs', 'latches', 'outputs', 'ands', 'symbols', 'comments'
-]
+DEFAULT_COMPONENTS = ["header", "inputs", "latches", "outputs", "ands", "symbols", "comments"]
 
 
 def parser_seq(components):
     for component in components:
         yield {
-            'header': parse_header,
-            'inputs': parse_input,
-            'latches': parse_latch,
-            'outputs': parse_output,
-            'ands': parse_and,
-            'symbols': parse_symbol,
-            'comments': parse_comment
+            "header": parse_header,
+            "inputs": parse_input,
+            "latches": parse_latch,
+            "outputs": parse_output,
+            "ands": parse_and,
+            "symbols": parse_symbol,
+            "comments": parse_comment,
         }.get(component)
 
 
@@ -275,21 +279,18 @@ def parse(circuit: str, components=None, state=None):
     parsers = parser_seq(components)
     parser = next(parsers)
 
-    lines = circuit.split('\n')
+    lines = circuit.split("\n")
     for line in lines:
         while not parser(line, state):
             try:
                 parser = next(parsers)
             except StopIteration as exc:
-                raise ValueError(f'Could not parse line: {line}') from exc
+                raise ValueError(f"Could not parse line: {line}") from exc
 
     return state
 
 
-def parse_no_header(circuit: str,
-                    num_inputs: int,
-                    num_outputs: int,
-                    components=None):
+def parse_no_header(circuit: str, num_inputs: int, num_outputs: int, components=None):
     state = Circuit()
 
     state.header = Header(None, num_inputs, None, num_outputs, None)

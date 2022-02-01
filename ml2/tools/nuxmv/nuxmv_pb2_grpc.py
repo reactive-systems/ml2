@@ -15,15 +15,15 @@ class nuXmvStub(object):
             channel: A grpc.Channel.
         """
         self.ModelCheck = channel.unary_unary(
-                '/nuXmv/ModelCheck',
-                request_serializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Problem.SerializeToString,
-                response_deserializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Solution.FromString,
-                )
+            "/nuXmv/ModelCheck",
+            request_serializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Problem.SerializeToString,
+            response_deserializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Solution.FromString,
+        )
         self.ModelCheckStream = channel.stream_stream(
-                '/nuXmv/ModelCheckStream',
-                request_serializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Problem.SerializeToString,
-                response_deserializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Solution.FromString,
-                )
+            "/nuXmv/ModelCheckStream",
+            request_serializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Problem.SerializeToString,
+            response_deserializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Solution.FromString,
+        )
 
 
 class nuXmvServicer(object):
@@ -32,68 +32,91 @@ class nuXmvServicer(object):
     def ModelCheck(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def ModelCheckStream(self, request_iterator, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
 
 def add_nuXmvServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'ModelCheck': grpc.unary_unary_rpc_method_handler(
-                    servicer.ModelCheck,
-                    request_deserializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Problem.FromString,
-                    response_serializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Solution.SerializeToString,
-            ),
-            'ModelCheckStream': grpc.stream_stream_rpc_method_handler(
-                    servicer.ModelCheckStream,
-                    request_deserializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Problem.FromString,
-                    response_serializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Solution.SerializeToString,
-            ),
+        "ModelCheck": grpc.unary_unary_rpc_method_handler(
+            servicer.ModelCheck,
+            request_deserializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Problem.FromString,
+            response_serializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Solution.SerializeToString,
+        ),
+        "ModelCheckStream": grpc.stream_stream_rpc_method_handler(
+            servicer.ModelCheckStream,
+            request_deserializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Problem.FromString,
+            response_serializer=ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Solution.SerializeToString,
+        ),
     }
-    generic_handler = grpc.method_handlers_generic_handler(
-            'nuXmv', rpc_method_handlers)
+    generic_handler = grpc.method_handlers_generic_handler("nuXmv", rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
- # This class is part of an EXPERIMENTAL API.
+# This class is part of an EXPERIMENTAL API.
 class nuXmv(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def ModelCheck(request,
+    def ModelCheck(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/nuXmv/ModelCheck',
+            "/nuXmv/ModelCheck",
             ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Problem.SerializeToString,
             ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Solution.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
     @staticmethod
-    def ModelCheckStream(request_iterator,
+    def ModelCheckStream(
+        request_iterator,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.stream_stream(
+            request_iterator,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.stream_stream(request_iterator, target, '/nuXmv/ModelCheckStream',
+            "/nuXmv/ModelCheckStream",
             ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Problem.SerializeToString,
             ml2_dot_tools_dot_nuxmv_dot_nuxmv__pb2.Solution.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )

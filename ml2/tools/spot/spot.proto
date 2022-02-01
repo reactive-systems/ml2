@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+import "ml2/tools/protos/ltl.proto";
+
+message RandLTLArgs {
+    int32 num_formulas = 1;
+    int32 num_aps = 2;
+    repeated string aps = 3;
+    bool allow_dups = 4;
+    string output = 5;
+    int32 seed = 6;
+    int32 simplify = 7;
+    int32 tree_size = 8;
+    string boolean_priorities = 9;
+    string ltl_priorities = 10;
+    string sere_priorities = 11;
+}
+
+service Spot {
+    rpc CheckSat(LTLSatProblem) returns (LTLSatSolution) {}
+    rpc MCTrace(LTLTraceMCProblem) returns (TraceMCSolution) {}
+    rpc RandLTL(RandLTLArgs) returns (stream LTLFormula) {}
+}

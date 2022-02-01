@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 
-def get_angles(position, i, d_embedding):
+def get_angles(position: int, i: int, d_embedding: int):
     """
     Args:
         position: int, position
@@ -15,7 +15,7 @@ def get_angles(position, i, d_embedding):
     return position * angel_rates
 
 
-def positional_encoding(position, d_embedding):
+def positional_encoding(position: int, d_embedding: int):
     """
     Returns a sinusoidal positional encoding
     Args:
@@ -23,8 +23,8 @@ def positional_encoding(position, d_embedding):
         d_embedding: int, embedding dimension
     """
     angle_rads = get_angles(
-        np.arange(position)[:, np.newaxis],
-        np.arange(d_embedding)[np.newaxis, :], d_embedding)
+        np.arange(position)[:, np.newaxis], np.arange(d_embedding)[np.newaxis, :], d_embedding
+    )
     angle_rads[:, 0::2] = np.sin(angle_rads[:, 0::2])
     angle_rads[:, 1::2] = np.cos(angle_rads[:, 1::2])
     pos_encoding = angle_rads[np.newaxis, ...]

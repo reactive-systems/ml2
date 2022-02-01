@@ -2,8 +2,9 @@
 
 import enum
 
+
 class LTLSynStatus(enum.Enum):
-    REALIZABLE = 'realizable'
-    UNREALIZABLE = 'unrealizable'
-    TIMEOUT = 'timeout'
-    ERROR = 'error'
+    REALIZABLE = "realizable"
+    UNREALIZABLE = "unrealizable"
+    TIMEOUT = "timeout"
+    ERROR = "error"

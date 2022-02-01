@@ -2,7 +2,6 @@
 
 
 class Tree(list):
-
     def __init__(self, label, children: list):
 
         list.__init__(self, children)
@@ -48,5 +47,5 @@ class Tree(list):
         return join_fn(self.label, childs)
 
     def __repr__(self):
-        childs = ', '.join(repr(child) for child in self)
-        return f'{type(self).__name__}({repr(self.label)}, [{childs}])'
+        childs = ", ".join(repr(child) for child in self)
+        return f"{type(self).__name__}({repr(self.label)}, [{childs}])"

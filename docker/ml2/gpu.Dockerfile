@@ -1,4 +1,6 @@
-FROM projects.cispa.saarland:5005/group-finkbeiner/tools/ml2/deps:latest-gpu
+ARG CONTAINER_REGISTRY=ghrc.io/reactive-systems/ml2
+
+FROM $CONTAINER_REGISTRY/deps:latest-gpu
 
 COPY . /ml2
 

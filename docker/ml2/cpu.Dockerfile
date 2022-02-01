@@ -1,4 +1,6 @@
-FROM projects.cispa.saarland:5005/group-finkbeiner/tools/ml2/deps:latest-cpu
+ARG CONTAINER_REGISTRY=ghrc.io/reactive-systems/ml2
+
+FROM $CONTAINER_REGISTRY/deps:latest-cpu
 
 COPY . /ml2
 

@@ -1,4 +1,6 @@
-FROM projects.cispa.saarland:5005/group-finkbeiner/tools/ml2/strix
+ARG CONTAINER_REGISTRY=ghrc.io/reactive-systems/ml2
+
+FROM $CONTAINER_REGISTRY/strix
 
 ENV PATH=/root/.local/bin:${PATH}
 

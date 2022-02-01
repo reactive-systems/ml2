@@ -15,15 +15,15 @@ class BoSyStub(object):
             channel: A grpc.Channel.
         """
         self.Synthesize = channel.unary_unary(
-                '/BoSy/Synthesize',
-                request_serializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSyProblem.SerializeToString,
-                response_deserializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSySolution.FromString,
-                )
+            "/BoSy/Synthesize",
+            request_serializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSyProblem.SerializeToString,
+            response_deserializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSySolution.FromString,
+        )
         self.SynthesizeStream = channel.stream_stream(
-                '/BoSy/SynthesizeStream',
-                request_serializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSyProblem.SerializeToString,
-                response_deserializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSySolution.FromString,
-                )
+            "/BoSy/SynthesizeStream",
+            request_serializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSyProblem.SerializeToString,
+            response_deserializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSySolution.FromString,
+        )
 
 
 class BoSyServicer(object):
@@ -32,68 +32,91 @@ class BoSyServicer(object):
     def Synthesize(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def SynthesizeStream(self, request_iterator, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
 
 def add_BoSyServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Synthesize': grpc.unary_unary_rpc_method_handler(
-                    servicer.Synthesize,
-                    request_deserializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSyProblem.FromString,
-                    response_serializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSySolution.SerializeToString,
-            ),
-            'SynthesizeStream': grpc.stream_stream_rpc_method_handler(
-                    servicer.SynthesizeStream,
-                    request_deserializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSyProblem.FromString,
-                    response_serializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSySolution.SerializeToString,
-            ),
+        "Synthesize": grpc.unary_unary_rpc_method_handler(
+            servicer.Synthesize,
+            request_deserializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSyProblem.FromString,
+            response_serializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSySolution.SerializeToString,
+        ),
+        "SynthesizeStream": grpc.stream_stream_rpc_method_handler(
+            servicer.SynthesizeStream,
+            request_deserializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSyProblem.FromString,
+            response_serializer=ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSySolution.SerializeToString,
+        ),
     }
-    generic_handler = grpc.method_handlers_generic_handler(
-            'BoSy', rpc_method_handlers)
+    generic_handler = grpc.method_handlers_generic_handler("BoSy", rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
- # This class is part of an EXPERIMENTAL API.
+# This class is part of an EXPERIMENTAL API.
 class BoSy(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def Synthesize(request,
+    def Synthesize(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.unary_unary(
+            request,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/BoSy/Synthesize',
+            "/BoSy/Synthesize",
             ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSyProblem.SerializeToString,
             ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSySolution.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )
 
     @staticmethod
-    def SynthesizeStream(request_iterator,
+    def SynthesizeStream(
+        request_iterator,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
+        return grpc.experimental.stream_stream(
+            request_iterator,
             target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.stream_stream(request_iterator, target, '/BoSy/SynthesizeStream',
+            "/BoSy/SynthesizeStream",
             ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSyProblem.SerializeToString,
             ml2_dot_tools_dot_bosy_dot_bosy__pb2.BoSySolution.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+        )

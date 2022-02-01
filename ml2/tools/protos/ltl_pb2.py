@@ -19,31 +19,24 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x1aml2/tools/protos/ltl.proto\"1\n\rLTLSatProblem\x12\x0f\n\x07\x66ormula\x18\x01 \x01(\t\x12\x0f\n\x07timeout\x18\x02 \x01(\x02\"/\n\x0eLTLSatSolution\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\r\n\x05trace\x18\x02 \x01(\t\"\\\n\x10LTLSpecification\x12\x0e\n\x06inputs\x18\x01 \x03(\t\x12\x0f\n\x07outputs\x18\x02 \x03(\t\x12\x12\n\nguarantees\x18\x03 \x03(\t\x12\x13\n\x0b\x61ssumptions\x18\x04 \x03(\tb\x06proto3'
+  serialized_pb=b'\n\x1aml2/tools/protos/ltl.proto\"\x1d\n\nLTLFormula\x12\x0f\n\x07\x66ormula\x18\x01 \x01(\t\"\\\n\x10LTLSpecification\x12\x0e\n\x06inputs\x18\x01 \x03(\t\x12\x0f\n\x07outputs\x18\x02 \x03(\t\x12\x12\n\nguarantees\x18\x03 \x03(\t\x12\x13\n\x0b\x61ssumptions\x18\x04 \x03(\t\"C\n\rLTLSatProblem\x12\x0f\n\x07\x66ormula\x18\x01 \x01(\t\x12\x10\n\x08simplify\x18\x02 \x01(\x08\x12\x0f\n\x07timeout\x18\x03 \x01(\x02\"/\n\x0eLTLSatSolution\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\r\n\x05trace\x18\x02 \x01(\t\"D\n\x11LTLTraceMCProblem\x12\x0f\n\x07\x66ormula\x18\x01 \x01(\t\x12\r\n\x05trace\x18\x02 \x01(\t\x12\x0f\n\x07timeout\x18\x03 \x01(\t\"!\n\x0fTraceMCSolution\x12\x0e\n\x06status\x18\x01 \x01(\tb\x06proto3'
 )
 
 
 
 
-_LTLSATPROBLEM = _descriptor.Descriptor(
-  name='LTLSatProblem',
-  full_name='LTLSatProblem',
+_LTLFORMULA = _descriptor.Descriptor(
+  name='LTLFormula',
+  full_name='LTLFormula',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='formula', full_name='LTLSatProblem.formula', index=0,
+      name='formula', full_name='LTLFormula.formula', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='timeout', full_name='LTLSatProblem.timeout', index=1,
-      number=2, type=2, cpp_type=6, label=1,
-      has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -60,46 +53,7 @@ _LTLSATPROBLEM = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=30,
-  serialized_end=79,
-)
-
-
-_LTLSATSOLUTION = _descriptor.Descriptor(
-  name='LTLSatSolution',
-  full_name='LTLSatSolution',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='status', full_name='LTLSatSolution.status', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='trace', full_name='LTLSatSolution.trace', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=81,
-  serialized_end=128,
+  serialized_end=59,
 )
 
 
@@ -151,14 +105,194 @@ _LTLSPECIFICATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=130,
+  serialized_start=61,
+  serialized_end=153,
+)
+
+
+_LTLSATPROBLEM = _descriptor.Descriptor(
+  name='LTLSatProblem',
+  full_name='LTLSatProblem',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='formula', full_name='LTLSatProblem.formula', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='simplify', full_name='LTLSatProblem.simplify', index=1,
+      number=2, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='timeout', full_name='LTLSatProblem.timeout', index=2,
+      number=3, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=155,
   serialized_end=222,
 )
 
+
+_LTLSATSOLUTION = _descriptor.Descriptor(
+  name='LTLSatSolution',
+  full_name='LTLSatSolution',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='status', full_name='LTLSatSolution.status', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='trace', full_name='LTLSatSolution.trace', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=224,
+  serialized_end=271,
+)
+
+
+_LTLTRACEMCPROBLEM = _descriptor.Descriptor(
+  name='LTLTraceMCProblem',
+  full_name='LTLTraceMCProblem',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='formula', full_name='LTLTraceMCProblem.formula', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='trace', full_name='LTLTraceMCProblem.trace', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='timeout', full_name='LTLTraceMCProblem.timeout', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=273,
+  serialized_end=341,
+)
+
+
+_TRACEMCSOLUTION = _descriptor.Descriptor(
+  name='TraceMCSolution',
+  full_name='TraceMCSolution',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='status', full_name='TraceMCSolution.status', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=343,
+  serialized_end=376,
+)
+
+DESCRIPTOR.message_types_by_name['LTLFormula'] = _LTLFORMULA
+DESCRIPTOR.message_types_by_name['LTLSpecification'] = _LTLSPECIFICATION
 DESCRIPTOR.message_types_by_name['LTLSatProblem'] = _LTLSATPROBLEM
 DESCRIPTOR.message_types_by_name['LTLSatSolution'] = _LTLSATSOLUTION
-DESCRIPTOR.message_types_by_name['LTLSpecification'] = _LTLSPECIFICATION
+DESCRIPTOR.message_types_by_name['LTLTraceMCProblem'] = _LTLTRACEMCPROBLEM
+DESCRIPTOR.message_types_by_name['TraceMCSolution'] = _TRACEMCSOLUTION
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
+
+LTLFormula = _reflection.GeneratedProtocolMessageType('LTLFormula', (_message.Message,), {
+  'DESCRIPTOR' : _LTLFORMULA,
+  '__module__' : 'ml2.tools.protos.ltl_pb2'
+  # @@protoc_insertion_point(class_scope:LTLFormula)
+  })
+_sym_db.RegisterMessage(LTLFormula)
+
+LTLSpecification = _reflection.GeneratedProtocolMessageType('LTLSpecification', (_message.Message,), {
+  'DESCRIPTOR' : _LTLSPECIFICATION,
+  '__module__' : 'ml2.tools.protos.ltl_pb2'
+  # @@protoc_insertion_point(class_scope:LTLSpecification)
+  })
+_sym_db.RegisterMessage(LTLSpecification)
 
 LTLSatProblem = _reflection.GeneratedProtocolMessageType('LTLSatProblem', (_message.Message,), {
   'DESCRIPTOR' : _LTLSATPROBLEM,
@@ -174,12 +308,19 @@ LTLSatSolution = _reflection.GeneratedProtocolMessageType('LTLSatSolution', (_me
   })
 _sym_db.RegisterMessage(LTLSatSolution)
 
-LTLSpecification = _reflection.GeneratedProtocolMessageType('LTLSpecification', (_message.Message,), {
-  'DESCRIPTOR' : _LTLSPECIFICATION,
+LTLTraceMCProblem = _reflection.GeneratedProtocolMessageType('LTLTraceMCProblem', (_message.Message,), {
+  'DESCRIPTOR' : _LTLTRACEMCPROBLEM,
   '__module__' : 'ml2.tools.protos.ltl_pb2'
-  # @@protoc_insertion_point(class_scope:LTLSpecification)
+  # @@protoc_insertion_point(class_scope:LTLTraceMCProblem)
   })
-_sym_db.RegisterMessage(LTLSpecification)
+_sym_db.RegisterMessage(LTLTraceMCProblem)
+
+TraceMCSolution = _reflection.GeneratedProtocolMessageType('TraceMCSolution', (_message.Message,), {
+  'DESCRIPTOR' : _TRACEMCSOLUTION,
+  '__module__' : 'ml2.tools.protos.ltl_pb2'
+  # @@protoc_insertion_point(class_scope:TraceMCSolution)
+  })
+_sym_db.RegisterMessage(TraceMCSolution)
 
 
 # @@protoc_insertion_point(module_scope)
