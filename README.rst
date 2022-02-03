@@ -2,6 +2,15 @@
 ML2: Machine Learning for Mathematics and Logics
 ================================================
 
+
+.. image:: https://img.shields.io/pypi/pyversions/ml2
+    :target: https://www.python.org
+.. image:: https://img.shields.io/pypi/v/ml2
+    :target: https://pypi.org/project/ml2/
+.. image:: https://img.shields.io/github/license/reactive-systems/ml2 
+    :target: https://github.com/reactive-systems/ml2/blob/main/LICENSE
+
+
 ML2 is an open source Python library for machine learning research on mathematical and logical reasoning problems. The library includes the (re-)implementation of the research papers `Teaching Temporal Logics to Neural Networks <https://iclr.cc/virtual/2021/poster/3332>`_ and `Neural Circuit Synthesis from Specification Patterns <https://proceedings.neurips.cc/paper/2021/file/8230bea7d54bcdf99cdfe85cb07313d5-Paper.pdf>`_. So far, the focus of ML2 is on propositional and linear-time temporal logic (LTL) and sequence-to-sequence models, such as the `Transformer <https://arxiv.org/abs/1706.03762>`_ and `hierarchical Transformer <https://arxiv.org/abs/2006.09265>`_. ML2 is actively developed at `CISPA Helmholtz Center for Information Security <https://cispa.de/en>`_.
 
 
@@ -26,13 +35,17 @@ Install ML2 from PyPI with ``pip install ml2``.
 From Source
 ~~~~~~~~~~~
 
-To install ML2 from source, clone the git repo and install with pip as follows::
+To install ML2 from source, clone the git repo and install with pip as follows:
+
+.. code:: shell
 
     git clone https://github.com/reactive-systems/ml2.git && \
     cd ml2 && \
     pip install .
 
-For development pip install in editable mode and include the development dependencies as follows::
+For development pip install in editable mode and include the development dependencies as follows:
+
+.. code:: shell
 
     pip install -e .[dev]
 
@@ -45,28 +58,34 @@ In this project, hierarchical Transformers were trained to synthesize hardware c
 Training
 ~~~~~~~~
 
-To train a hierarchical Transformer with default parameters::
+To train a hierarchical Transformer with default parameters:
+
+.. code:: shell
 
     python -m ml2.ltl.ltl_syn.ltl_syn_hier_transformer_experiment train
 
 Evaluation
 ~~~~~~~~~~
 
-To evaluate the hierarchical Transformer from our paper::
+To evaluate the hierarchical Transformer from our paper:
+
+.. code:: shell
 
     python -m ml2.ltl.ltl_syn.ltl_syn_hier_transformer_experiment eval -n hier-transformer-0`
 
 Datasets and Data Generation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To generate a dataset of specifications and AIGER circuits::
+To generate a dataset of specifications and AIGER circuits:
+
+.. code:: shell
     
     python -m ml2.ltl.ltl_syn.ltl_syn_data_gen_patterns --name dataset`
 
 How to Cite
 ~~~~~~~~~~~
 
-::
+.. code:: tex
 
     @inproceedings{neural_circuit_synthesis,
         author    = {Frederik Schmitt and Christopher Hahn and Markus N. Rabe and Bernd Finkbeiner},
@@ -85,25 +104,31 @@ In this project, Transformers were trained on the problem of finding a satisfyin
 Training
 ~~~~~~~~
 
-To train a Transformer with default parameters on the trace generation problem::
+To train a Transformer with default parameters on the trace generation problem:
+
+.. code:: shell
 
     python -m ml2.ltl.ltl_sat.ltl_sat_transformer_experiment train
 
-For the propositional satisfiability experiment::
+For the propositional satisfiability experiment:
+
+.. code:: shell
 
     python -m ml2.prop.prop_sat_transformer_experiment train
 
 Evaluation
 ~~~~~~~~~~
 
-To evaluate a Transformer trained on the trace generation problem::
+To evaluate a Transformer trained on the trace generation problem:
+
+.. code:: shell
 
     python -m ml2.ltl.ltl_sat.ltl_sat_transformer_experiment eval -n hier-transformer-0`
 
 How to Cite
 ~~~~~~~~~~~
 
-::
+.. code:: tex
 
     @inproceedings{teaching_temporal_logics,
         title     = {Teaching Temporal Logics to Neural Networks},
