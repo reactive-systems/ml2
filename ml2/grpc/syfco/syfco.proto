@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+import "ml2/grpc/ltl/ltl.proto";
+import "ml2/grpc/tools/tools.proto";
+
+message TLSFFileString { string tlsf = 1; }
+
+message ConvertTLSFToSpecRequest {
+  // Defines run- and tool-specific parameters. As Map (Dict in Python).
+  // Typical examples are threads, timeouts etc. Can be empty.
+  map<string, string> parameters = 1;
+  // A string, read from a TLSF file
+  TLSFFileString tlsf = 2;
+}
+
+message ConvertTLSFToSpecResponse {
+  // A string, read from a TLSF file
+  optional DecompLTLSpecification specification = 1;
+  // Here additional information should be supplied if something went wrong
+  string error = 2;
+  // Tool that created the response
+  string tool = 3;
+  // How long the tool took to create the result.
+  optional google.protobuf.Duration time = 4;
+}
+
+// Syfco: A tool for reading, manipulating and transforming synthesis
+// specifications in TLSF. is a tool
+service Syfco {
+  // Setup call, which is typically called before the first model checking call
+  // has happened.
+  rpc Setup(SetupRequest) returns (SetupResponse) {}
+  // Call to find out the identity and functionality of the server, i.e. the
+  // tool that is running the server and what it is supposed to do.
+  rpc Identify(IdentificationRequest) returns (IdentificationResponse) {}
+  // Call to synthesize a single LTL specification
+  rpc ConvertTLSFToSpec(ConvertTLSFToSpecRequest)
+      returns (ConvertTLSFToSpecResponse) {}
+}

@@ -19,17 +19,17 @@ def aalta_wrapper_str(formula: str, evidence: bool = True, timeout: float = None
         out = subprocess.run(args, capture_output=True, input=formula, text=True, timeout=timeout)
     except subprocess.TimeoutExpired:
         logger.debug("aalta timeout")
-        return {"status": LTLSatStatus.TIMEOUT}
+        return {"status": LTLSatStatus("timeout")}
     except subprocess.CalledProcessError:
         logger.error("subprocess called process error")
-        return {"status": LTLSatStatus.ERROR}
+        return {"status": LTLSatStatus("error")}
     except Exception:
         logger.error("Unknown exception")
-        return {"status": LTLSatStatus.ERROR}
+        return {"status": LTLSatStatus("error")}
     aalta_stdout = out.stdout
     aalta_stdout_lines = aalta_stdout.split("\n")
     if out.returncode == 0 and aalta_stdout_lines[1] == "sat":
-        return {"status": LTLSatStatus.SATISFIABLE, "trace": "\n".join(aalta_stdout_lines[2:])}
+        return {"status": LTLSatStatus("satisfiable"), "trace": "\n".join(aalta_stdout_lines[2:])}
     if out.returncode == 0 and aalta_stdout_lines[1] == "unsat":
-        return {"status": LTLSatStatus.UNSATISFIABLE}
-    return {"status": LTLSatStatus.ERROR, "message": aalta_stdout}
+        return {"status": LTLSatStatus("unsatisfiable")}
+    return {"status": LTLSatStatus("error"), "message": aalta_stdout}

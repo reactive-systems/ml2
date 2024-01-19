@@ -1,7 +1,8 @@
-from .assignment_encoder import AssignmentEncoder
+from .assignment import Assignment
+from .prop_formula import PropFormula
 from .prop_lexer import lex_prop
 from .prop_parser import parse_prop
-from .prop_formula import PropFormula
-from .prop_sat_data import PropSatData, PropSatSplitData
-from .prop_sat_status import PropSatStatus, PropValidStatus
-from .prop_encoder import PropSeqEncoder, PropTreeEncoder
+from .prop_sat_dataset import PropSatDataset, PropSatSplitDataset
+from .prop_sat_problem import PropSatProblem, PropSatSolution
+from .prop_sat_status import PropSatStatus
+from .prop_valid_status import PropValidStatus

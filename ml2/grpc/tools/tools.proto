@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+message SetupRequest {
+  // Defines tool-specific parameters. As Map (Dict in Python).
+  // Typical examples are memory limits etc. Can be empty.
+  map<string, string> parameters = 1;
+}
+
+message SetupResponse {
+  bool success = 1;
+  // If success is false, this should contain further information.
+  string error = 2;
+}
+
+message IdentificationRequest {}
+
+// Announces itself bu giving the name of the tool and the version, running on
+// the grpc server
+message IdentificationResponse {
+  // what tool is running on the grpc server
+  string tool = 1;
+  // the purpose of the grpc server. A grpc server can have multiple
+  // functionalities.
+  repeated Functionality functionalities = 2;
+  // the version, the grpc server is currently running
+  string version = 3;
+}
+
+// All available purposes of tools in ML2 / NeuroSynt
+// Can easily be extended to more purposes without breaking backwards
+// compatibility.
+enum Functionality {
+  FUNCTIONALITY_OTHER = 0;
+  FUNCTIONALITY_LTL_AIGER_MODELCHECKING = 1;
+  FUNCTIONALITY_LTL_MEALY_MODELCHECKING = 2;
+  FUNCTIONALITY_LTL_AIGER_SYNTHESIS = 3;
+  FUNCTIONALITY_LTL_MEALY_SYNTHESIS = 4;
+  FUNCTIONALITY_LTL_EQUIVALENCE = 5;
+  FUNCTIONALITY_LTL_TRACE_MODELCHECKING = 6;
+  FUNCTIONALITY_RANDLTL = 7;
+  FUNCTIONALITY_AIGER_TO_MEALY = 8;
+  FUNCTIONALITY_MEALY_TO_AIGER = 9;
+  FUNCTIONALITY_TLSF_TO_SPEC = 10;
+  FUNCTIONALITY_NEURAL_LTL_AIGER_SYNTHESIS = 11;
+}
+

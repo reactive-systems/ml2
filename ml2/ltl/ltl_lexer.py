@@ -1,6 +1,7 @@
 """LTL lexer"""
 
 import logging
+
 import sly
 
 logging.basicConfig(level=logging.INFO)
@@ -8,7 +9,6 @@ logger = logging.getLogger(__name__)
 
 
 class LTLPrefixLexer(sly.Lexer):
-
     bool_ops = {NOT, AND, OR, XOR, IMPL, EQUIV}
     temp_ops = {NEXT, UNTIL, WUNTIL, RELEASE, EVEN, GLOB}
     tokens = {AP, CONST}.union(bool_ops, temp_ops)
@@ -44,9 +44,7 @@ class LTLPrefixLexer(sly.Lexer):
         self.index += 1
 
 
-# TODO straightforward inheritance from PrefixLexer does not seem possible
 class LTLInfixLexer(sly.Lexer):
-
     bool_ops = {NOT, AND, OR, XOR, IMPL, EQUIV}
     temp_ops = {NEXT, UNTIL, WUNTIL, RELEASE, EVEN, GLOB}
     tokens = {AP, CONST, LPAR, RPAR}.union(bool_ops, temp_ops)

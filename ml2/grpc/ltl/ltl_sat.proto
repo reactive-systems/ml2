@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+message LTLSatProblem {
+  string formula = 1;
+  bool simplify = 2;
+  float timeout = 3;
+}
+
+message LTLSatSolution {
+  string status = 1;
+  string trace = 2;
+}

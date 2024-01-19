@@ -1,0 +1,26 @@
+{
+  "name": "t-0-vp-eval",
+  "auto_version": true,
+  "project": "ltl-strace",
+  "evaluation": [
+    {
+      "type": "SupervisedEvalTask",
+      "batch_size": 32,
+      "dataset": {
+        "base": "ltl-strace/rft-0/test",
+        "sample": 256
+      },
+      "pipeline": {
+        "type": "BeamSearchVerificationPipeline",
+        "verifier": {
+          "type": "SpotSTraceMC",
+          "start_containerized_service": true
+        },
+        "pipeline": {
+          "base": "ltl-strace/t-0/train/pipe",
+          "beam_size": [3]
+        }
+      }
+    }
+  ]
+}

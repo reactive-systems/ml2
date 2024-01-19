@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+message LTLTraceMCProblem {
+  string formula = 1;
+  string trace = 2;
+  string timeout = 3;
+}
+
+message LTLTraceMCSolution { string status = 1; }

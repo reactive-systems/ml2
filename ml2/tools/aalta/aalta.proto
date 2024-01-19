@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-import "ml2/tools/protos/ltl.proto";
-
-service Aalta {
-    rpc CheckSat(LTLSatProblem) returns (LTLSatSolution) {}
-}

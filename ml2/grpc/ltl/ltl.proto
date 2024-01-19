@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+
+// Mirrors ml2.ltl.ltl_formula.LTLFormula
+message LTLFormula {
+  // Represents an LTL formula as string.
+  // TODO allowed operator symbols
+  string formula = 1;
+  // The notation in which the formula is serialized. Infix is default.
+  string notation = 2;
+}
+
+// Represents a decompositioned LTL specification. Can be composed to an LTL
+// specification as follows
+// (assumption_1 ∧ ... ∧ assumption_n) → (guarantee_1 ∧ ... ∧ guarantee_m)
+// Mirrors ml2.ltl.ltl_spec.decomp_ltl_spec.DecompLTLSpec
+message DecompLTLSpecification {
+  // All input atomic propositions that occur in guarantees or assumptions. Can
+  // be a superset thereof.
+  repeated string inputs = 1;
+  // All output atomic propositions that occur in guarantees or assumptions.
+  // Can be a superset thereof.
+  repeated string outputs = 2;
+  // A set of guarantees that make up the specifications. All inputs and outputs
+  // occuring in any guarantee must be part of input/output.
+  repeated LTLFormula guarantees = 3;
+  // A set of assumption that make up the specifications. All inputs and outputs
+  // occuring in any guarantee must be part of input/output.
+  repeated LTLFormula assumptions = 4;
+}
+
+// Represents an LTL specification. Not decomposed!
+// Mirrors ml2.ltl.ltl_spec.ltl_spec.LTLSpec
+message LTLSpecification {
+  // All input atomic propositions that occur in formula. Can be a superset
+  // thereof.
+  repeated string inputs = 1;
+  // All output atomic propositions that occur in formula. Can be a superset
+  // thereof.
+  repeated string outputs = 2;
+  LTLFormula formula = 3;
+}

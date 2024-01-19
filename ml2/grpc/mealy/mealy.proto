@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+message MealyMachine { string machine = 1; }
+
+message MealyTransitions { string transitions = 1; }

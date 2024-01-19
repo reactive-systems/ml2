@@ -1,6 +1,6 @@
 ARG CONTAINER_REGISTRY=ghrc.io/reactive-systems/ml2
 
-FROM $CONTAINER_REGISTRY/deps:latest-cpu
+FROM $CONTAINER_REGISTRY/deps:cpu
 
 COPY . /ml2
 

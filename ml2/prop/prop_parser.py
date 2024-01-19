@@ -1,13 +1,12 @@
-"""propositional logic parser"""
+"""Propositional logic parser"""
 
 import sly
 
-from ..data.ast import BinaryAST
-from .prop_lexer import PropPrefixLexer, PropInfixLexer
+from ..dtypes.binary_ast import BinaryAST
+from .prop_lexer import PropInfixLexer, PropPrefixLexer
 
 
 class PropPrefixParser(sly.Parser):
-
     tokens = PropPrefixLexer.tokens
     precedence = (
         ("right", EQUIV, IMPL),
@@ -38,7 +37,6 @@ class PropPrefixParser(sly.Parser):
 
 
 class PropInfixParser(sly.Parser):
-
     tokens = PropInfixLexer.tokens
     precedence = (
         ("right", EQUIV, IMPL),

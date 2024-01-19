@@ -1,0 +1,80 @@
+{
+  "upload": false,
+  "name": "ht",
+  "auto_version": true,
+  "project": "ltl-syn",
+  "pipeline": {
+    "type": "TFSynHierTransformerPipeline",
+    "custom_pos_enc": true,
+    "model_config": {
+      "alpha": 0.5,
+      "beam_size": 2,
+      "d_embed": 256,
+      "d_ff": 1024,
+      "dropout": 0.0,
+      "dtype_float": "float32",
+      "dtype_int": "int32",
+      "ff_activation": "relu",
+      "num_heads": 4,
+      "num_layers_dec": 8,
+      "num_layers_enc_d0": 4,
+      "num_layers_enc_d1": 4
+    },
+    "input_tokenizer": {
+      "type": "DecompLTLSpecToSeqTPETokenizer",
+      "num_props": 12,
+      "prop_pad": 32,
+      "pos_pad": 256,
+      "notation": "prefix",
+      "tpe_format": "branch-down",
+      "rename_aps": true
+    },
+    "target_tokenizer": {
+      "type": "LTLSynSolutionToSeqTokenizer",
+      "components": [
+        "inputs",
+        "latches",
+        "outputs",
+        "ands"
+      ],
+      "start": false,
+      "eos": true,
+      "pad": 128
+    },
+    "max_local_length": 32,
+    "max_local_num": 12,
+    "max_target_length": 128,
+    "vocab_dataset": "ltl-syn/scpa-8/val"
+  },
+  "trainer": {
+    "type": "KerasTrainerDDP",
+    "train_dataset": "ltl-syn/scpa-8/train",
+    "val_dataset": {
+      "base": "ltl-syn/scpa-8/val",
+      "sample": 1024
+    },
+    "global_batch_size": 256,
+    "cache_dataset": true,
+    "checkpoint_monitor": "val_acc_per_seq",
+    "drop_batch_remainder": true,
+    "dtype_float": "float32",
+    "dtype_int": "int32",
+    "initial_steps": 0,
+    "optimizer": {
+      "type": "Adam",
+      "beta_1": 0.9,
+      "beta_2": 0.98,
+      "epsilon": 1e-9,
+      "learning_rate": {
+        "type": "TFTransformerLRSchedule",
+        "d_embed": 256,
+        "warmup_steps": 4000
+      }
+    },
+    "shuffle_on_load": true,
+    "steps": 5,
+    "stream_to_wandb": false,
+    "tf_shuffle_buffer_size": 0,
+    "val_freq": 1
+  }
+}
