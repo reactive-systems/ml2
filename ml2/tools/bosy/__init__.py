@@ -1,3 +1,5 @@
-from . import bosy_wrapper, bosy_worker, bosy_utils
+from ...utils import is_ray_available
 from .bosy import BoSy
-from .bosy_worker import add_bosy_args, bosy_worker_fn
+
+if is_ray_available():
+    from .bosy_worker import add_bosy_args, bosy_worker_fn, bosy_worker_fn_dict

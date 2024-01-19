@@ -1,0 +1,26 @@
+{
+  "name": "ht-0-vp-eval",
+  "auto_version": true,
+  "project": "ltl-syn",
+  "evaluation": [
+    {
+      "type": "SupervisedEvalTask",
+      "batch_size": 32,
+      "dataset": {
+        "base": "ltl-syn/scpa-2/test",
+        "sample": 1024
+      },
+      "pipeline": {
+        "type": "BeamSearchVerificationPipeline",
+        "verifier": {
+          "type": "NuxmvMC",
+          "start_containerized_service": true
+        },
+        "pipeline": {
+          "base": "ltl-syn/ht-0/train/pipe",
+          "beam_size": [1, 4, 8, 16]
+        }
+      }
+    }
+  ]
+}

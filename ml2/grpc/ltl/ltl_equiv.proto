@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+message LTLEquivProblem {
+  string formula1 = 1;
+  string formula2 = 2;
+  optional float timeout = 3;
+}
+
+message LTLEquivSolution {
+  string status = 1;
+  optional float time = 2;
+}

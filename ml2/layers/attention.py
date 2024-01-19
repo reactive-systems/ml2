@@ -1,6 +1,9 @@
 """Implementation of scaled dot-product attention and multi-head attention as described in 'Attention Is All You Need' (Vaswani et al., 2017) based on https://www.tensorflow.org/tutorials/text/transformer"""
 
+
 import tensorflow as tf
+
+from ..utils.dist_utils import architecture_is_apple_arm
 
 
 def scaled_dot_product_attention(queries, keys, values, mask=None, dtype=tf.float32):
@@ -22,7 +25,10 @@ def scaled_dot_product_attention(queries, keys, values, mask=None, dtype=tf.floa
 
     # mask scaled values
     if mask is not None:
-        scaled_attention_logits += mask * dtype.min
+        if architecture_is_apple_arm:
+            scaled_attention_logits += mask * (dtype.min / 2.0)
+        else:
+            scaled_attention_logits += mask * dtype.min
 
     # perform softmax over key axis and multiply resulting attention weights with values
     attention_weights = tf.nn.softmax(
@@ -34,7 +40,6 @@ def scaled_dot_product_attention(queries, keys, values, mask=None, dtype=tf.floa
 
 class MultiHeadAttention(tf.keras.layers.Layer):
     def __init__(self, d_embedding, num_heads):
-
         if d_embedding % num_heads != 0:
             raise ValueError(
                 f"Embedding dimension {d_embedding} must be devisible by number of heads {num_heads}."
@@ -47,7 +52,6 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         self.d_heads = d_embedding // num_heads
 
     def build(self, input_shape):
-
         self.Q = tf.keras.layers.Dense(self.d_embedding)
         self.K = tf.keras.layers.Dense(self.d_embedding)
         self.V = tf.keras.layers.Dense(self.d_embedding)
@@ -107,6 +111,12 @@ class MultiHeadAttention(tf.keras.layers.Layer):
             # update cache
             cache["keys"] = tf.transpose(keys, perm=[0, 2, 1, 3])
             cache["values"] = tf.transpose(values, perm=[0, 2, 1, 3])
+
+        if mask is not None:
+            num_mask_heads = tf.shape(mask)[1]
+            if num_mask_heads > 1 and num_mask_heads != self.num_heads:
+                if self.num_heads % num_mask_heads == 0:
+                    mask = tf.repeat(mask, (self.num_heads // num_mask_heads), axis=1)
 
         scaled_attention, attention_weights = scaled_dot_product_attention(
             queries, keys, values, mask

@@ -1,0 +1,19 @@
+{
+  "name": "t-0-eval",
+  "auto_version": true,
+  "project": "ltl-syn",
+  "evaluation": [
+    {
+      "type": "SupervisedEvalTask",
+      "batch_size": 32,
+      "dataset": {
+        "base": "ltl-syn/scpa-2/test",
+        "sample": 1024
+      },
+      "pipeline": {
+        "base": "ltl-syn/t-0/train/pipe",
+        "beam_size": [1, 4, 8, 16]
+      }
+    }
+  ]
+}

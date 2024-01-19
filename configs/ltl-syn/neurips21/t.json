@@ -1,0 +1,88 @@
+{
+  "name": "t",
+  "auto_version": true,
+  "project": "ltl-syn",
+  "pipeline": {
+    "type": "TFTransformerPipeline",
+    "custom_pos_enc": true,
+    "model_config": {
+      "alpha": 0.5,
+      "beam_size": 2,
+      "d_embed": 256,
+      "d_ff": 1024,
+      "dropout": 0.0,
+      "dtype_float": "float32",
+      "dtype_int": "int32",
+      "ff_activation": "relu",
+      "num_heads": 4,
+      "num_layers": 8
+    },
+    "input_tokenizer": {
+      "type": "ExprToSeqTPETokenizer",
+      "dtype": "LTLFormula",
+      "notation": "prefix",
+      "start": false,
+      "eos": false,
+      "pad": 256,
+      "tpe_format": "branch-down",
+      "tpe_pad": 256
+    },
+    "target_tokenizer": {
+      "type": "LTLSynSolutionToSeqTokenizer",
+      "components": ["inputs", "latches", "outputs", "ands"],
+      "inputs": ["i0", "i1", "i2", "i3", "i4"],
+      "outputs": ["o0", "o1", "o2", "o3", "o4"],
+      "start": false,
+      "eos": true,
+      "pad": 128
+    },
+    "max_input_length": 256,
+    "max_target_length": 128,
+    "vocab_dataset": "ltl-syn/scpa-2/train"
+  },
+  "trainer": {
+    "type": "KerasTrainer",
+    "train_dataset": "ltl-syn/scpa-2/train",
+    "val_dataset": {
+      "base": "ltl-syn/scpa-2/val",
+      "sample": 1024
+    },
+    "batch_size": 256,
+    "cache_dataset": true,
+    "checkpoint_monitor": "val_acc_per_seq",
+    "drop_batch_remainder": true,
+    "dtype_float": "float32",
+    "dtype_int": "int32",
+    "initial_steps": 0,
+    "optimizer": {
+      "type": "Adam",
+      "beta_1": 0.9,
+      "beta_2": 0.98,
+      "epsilon": 1e-9,
+      "learning_rate": {
+        "type": "TFTransformerLRSchedule",
+        "d_embed": 256,
+        "warmup_steps": 4000
+      }
+    },
+    "shuffle_on_load": true,
+    "steps": 30000,
+    "stream_to_wandb": false,
+    "tf_shuffle_buffer_size": 0,
+    "val_freq": 50
+  },
+  "evaluation": [
+    {
+      "type": "SupervisedEvalTask",
+      "batch_size": 64,
+      "dataset": {
+        "base": "ltl-syn/scpa-2/test",
+        "sample": 1024
+      },
+      "pipeline": {
+        "alpha": [0.5],
+        "beam_size": [1, 2, 4, 16]
+      }
+    }
+  ]
+}

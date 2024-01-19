@@ -1,15 +1,15 @@
-"""gRPC Server that checks the satisfiability of an LTL formula using Aalta"""
+"""gRPC Server that checks the satisfiability of a propositional formula using Limboole"""
 
 import argparse
-from concurrent import futures
 import logging
 import time
+from concurrent import futures
 
 import grpc
 
-from . import limboole_pb2_grpc
+from ...grpc.limboole import limboole_pb2_grpc
+from ...grpc.prop import prop_pb2
 from .limboole_wrapper import limboole_sat_wrapper, limboole_valid_wrapper
-from ..protos import prop_pb2
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

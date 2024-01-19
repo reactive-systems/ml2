@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+// All available system types
+// Can easily be extended without breaking backwards compatibility
+enum System {
+  SYSTEM_AIGER = 0;
+  SYSTEM_MEALY = 1;
+}

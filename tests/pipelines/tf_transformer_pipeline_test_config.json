@@ -1,0 +1,37 @@
+{
+  "name": "tf-transformer-test-pipeline",
+  "project": "test-project",
+  "type": "TFTransformerPipeline",
+  "custom_pos_enc": true,
+  "model_config": {
+    "alpha": 0.5,
+    "beam_size": 2,
+    "d_embed": 256,
+    "d_ff": 1024,
+    "dropout": 0.0,
+    "dtype_float": "float32",
+    "dtype_int": "int32",
+    "ff_activation": "relu",
+    "num_heads": 4,
+    "num_layers": 8
+  },
+  "input_tokenizer": {
+    "type": "ExprToSeqTPETokenizer",
+    "dtype": "LTLFormula",
+    "notation": "prefix",
+    "start": false,
+    "eos": false,
+    "pad": 128,
+    "tpe_format": "branch-down",
+    "tpe_pad": 256
+  },
+  "target_tokenizer": {
+    "type": "SymTraceToSeqTokenizer",
+    "notation": "prefix",
+    "start": false,
+    "eos": true,
+    "pad": 128
+  },
+  "max_input_length": 128,
+  "max_target_length": 128
+}

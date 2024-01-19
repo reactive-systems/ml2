@@ -3,8 +3,11 @@
 The implementation is based on https://github.com/tensorflow/models/blob/master/official/nlp/transformer/beam_search_v1.py
 """
 
+
 import tensorflow as tf
 from tensorflow.python.util import nest
+
+from ..utils.dist_utils import architecture_is_apple_arm
 
 
 class StateKeys:
@@ -33,6 +36,10 @@ class BeamSearch:
         self.alpha = params["alpha"]
         self.beam_size = params["beam_size"]
         self.dtype = params["dtype_float"]
+        self.dtype_min = self.dtype.min
+        # due to some bug causing underflow when using tensorflow-mac on m1 gpu divide dtype_min by some magic number
+        if architecture_is_apple_arm:
+            self.dtype_min = self.dtype_min / 2.0
         self.eos_id = params["target_eos_id"]
         self.max_decode_length = params["max_decode_length"]
         self.vocab_size = params["target_vocab_size"]
@@ -90,7 +97,7 @@ class BeamSearch:
         alive_seq = tf.expand_dims(alive_seq, axis=2)
 
         initial_log_probs = tf.constant(
-            [[0.0] + [self.dtype.min] * (self.beam_size - 1)],
+            [[0.0] + [self.dtype_min] * (self.beam_size - 1)],
             dtype=self.dtype,
             name="initial_log_probs",
         )
@@ -100,7 +107,7 @@ class BeamSearch:
 
         finished_seq = tf.zeros([self.batch_size, self.beam_size, 1], tf.int32)
         finished_scores = (
-            tf.ones([self.batch_size, self.beam_size], dtype=self.dtype) * self.dtype.min
+            tf.ones([self.batch_size, self.beam_size], dtype=self.dtype) * self.dtype_min
         )
         finished_flags = tf.zeros([self.batch_size, self.beam_size], tf.bool)
 
@@ -153,7 +160,7 @@ class BeamSearch:
         worst_finished_scores = tf.reduce_min(finished_scores, axis=1)
         finished_batches = tf.reduce_any(finished_flags, axis=1)
         # if there are no finished sequences set to large negative number
-        worst_finished_scores += (1.0 - tf.cast(finished_batches, self.dtype)) * self.dtype.min
+        worst_finished_scores += (1.0 - tf.cast(finished_batches, self.dtype)) * self.dtype_min
 
         worst_finished_better_than_best_alive = tf.reduce_all(
             tf.greater(worst_finished_scores, best_alive_scores)
@@ -252,7 +259,7 @@ class BeamSearch:
                 cache of top alive sequences
         """
         # set finished sequences to large negative number
-        new_alive_log_probs += tf.cast(new_finished_flags, self.dtype) * self.dtype.min
+        new_alive_log_probs += tf.cast(new_finished_flags, self.dtype) * self.dtype_min
 
         top_alive_seq, top_alive_log_probs, top_alive_cache = self.gather_top_beams(
             [new_alive_seq, new_alive_log_probs, new_alive_cache],
@@ -295,7 +302,7 @@ class BeamSearch:
         # calculate new scores from log probabilities
         length_norm = self.length_normalization(self.alpha, cur_index + 1)
         new_scores = new_alive_log_probs / length_norm
-        new_scores += (1.0 - tf.cast(new_finished_flags, self.dtype)) * self.dtype.min
+        new_scores += (1.0 - tf.cast(new_finished_flags, self.dtype)) * self.dtype_min
 
         finished_seq = tf.concat([finished_seq, new_alive_seq], axis=1)
         finished_scores = tf.concat([finished_scores, new_scores], axis=1)
@@ -326,11 +333,10 @@ class BeamSearch:
 
         # creating a tensor with shape (batch_size, beam_size, 2) where the last dimension constains gathering coordinates (i, j)
         coordinates = tf.stack([batch_pos, beam_indices], axis=2)
-
         return nest.map_structure(lambda state: tf.gather_nd(state, coordinates), nested)
 
     def gather_top_beams(self, nested, log_probs, beam_size):
-        _, top_indices = tf.nn.top_k(log_probs, k=beam_size)
+        _, top_indices = tf.math.top_k(log_probs, k=beam_size)
         return self.gather_beams(nested, top_indices, beam_size)
 
     def length_normalization(self, alpha, length):

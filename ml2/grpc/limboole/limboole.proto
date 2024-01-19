@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+import "ml2/grpc/prop/prop.proto";
+
+service Limboole {
+  // check satisfiability
+  rpc CheckSat(PropSatProblem) returns (PropSatSolution) {}
+  // check validity
+  rpc CheckValid(PropSatProblem) returns (PropSatSolution) {}
+}

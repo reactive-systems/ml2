@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+message LTLSatProblemAalta {
+  string formula = 1;
+  bool simplify = 2;
+  float timeout = 3;
+}
+
+message LTLSatSolutionAalta {
+  string status = 1;
+  string trace = 2;
+}
+
+service Aalta {
+  rpc CheckSat(LTLSatProblemAalta)
+      returns (LTLSatSolutionAalta) {}
+}

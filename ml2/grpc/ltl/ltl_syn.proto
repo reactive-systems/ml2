@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+
+import "ml2/grpc/aiger/aiger.proto";
+import "ml2/grpc/ltl/ltl.proto";
+import "ml2/grpc/ltl/ltl_mc.proto";
+import "ml2/grpc/mealy/mealy.proto";
+import "ml2/grpc/system/system.proto";
+import "ml2/grpc/tools/tools.proto";
+
+// Mirrors ml2.ltl.ltl_syn.ltl_syn_status.LTLSynStatus
+enum LTLSynStatus {
+  // Default Value, additional Information should be given if set on purpose
+  LTLSYNSTATUS_UNSPECIFIED = 0;
+  // Signals that the LTL Specification was found to be realizable
+  LTLSYNSTATUS_REALIZABLE = 1;
+  // Signals that the LTL Specification was found to be unrealizable
+  LTLSYNSTATUS_UNREALIZABLE = 2;
+  // Signals that some error happened during computation. Additional
+  // information should be given.
+  LTLSYNSTATUS_ERROR = 3;
+  // Signals that the synthesis timed out.
+  LTLSYNSTATUS_TIMEOUT = 4;
+  // Signals that synthesis was not successful, However no error and timeout
+  // happened. Additional Information should be given.
+  LTLSYNSTATUS_NONSUCCESS = 5;
+}
+
+// Mirrors ml2.ltl.ltl_real_status.LTLRealStatus
+enum LTLRealStatus {
+  // Default Value, additional Information should be given if set on purpose
+  LTLREALSTATUS_UNSPECIFIED = 0;
+  // Signals that the LTL Specification was found to be realizable
+  LTLREALSTATUS_REALIZABLE = 1;
+  // Signals that the LTL Specification was found to be unrealizable
+  LTLREALSTATUS_UNREALIZABLE = 2;
+}
+
+// An LTL synthesis problem. Used as Request message for Synthesis
+message LTLSynProblem {
+  // Defines run- and tool-specific parameters. As Map (Dict in Python).
+  // Typical examples are threads, timeouts etc. Can be empty.
+  map<string, string> parameters = 1;
+  // A specification can either be decomposed or not. At least one of them
+  // should always be set. Depending on the service this message is used in, it
+  // is ok too enforce the same option always.
+  oneof specification {
+    DecompLTLSpecification decomp_specification = 2;
+    LTLSpecification formula_specification = 3;
+  }
+  System system_format = 4;
+}
+
+// An LTL Synthesis solution. Used as response message for Synthesis.
+message LTLSynSolution {
+  // A system can either be an AIGER circuit or a Mealy Machine. It is allowed
+  // to pass no system, e.g. if a timeout happened. Depending on the service
+  // this message is used in, it is ok too enforce the same option always.
+  // If the system is not known to be correct (i.e. by generated through an
+  // approach that is not sound), a model checking solution needs to be passed,
+  // too.
+  oneof system {
+    AigerCircuit circuit = 1;
+    MealyMachine mealy_machine = 2;
+  }
+  // Shows, whether the specification was found to be realizable or
+  // unrealizable. May not be set, e.g. if a timeout happened.
+  optional bool realizable = 3;
+  // A status that includes useful information about the run. For some status
+  // values, additional information should be given in detailed_status.
+  LTLSynStatus status = 4;
+  // Here additional information should be supplied if the status value requires
+  // more details. For example an error trace for ERROR or a reason for
+  // NONSUCCESS
+  string detailed_status = 5;
+  // tool that created the response
+  string tool = 6;
+  // How long the tool took to create the result.
+  optional google.protobuf.Duration time = 7;
+}
+
+// An LTL Synthesis solution. Used as response message for Synthesis through a
+// neural solver.
+message NeuralLTLSynSolution {
+  LTLSynSolution synthesis_solution = 1;
+  // A model-checking result can optionally be included in the response,
+  // certifying that the solution is correct. Needs to be set if the system is
+  // not known to be correct.
+  optional LTLMCSolution model_checking_solution = 2;
+  // Tool that created the response
+  string tool = 3;
+  // How long the tool took to create the result.
+  optional google.protobuf.Duration time = 4;
+}
+
+message NeuralLTLSynSolutionSpecPair {
+  // A specification can either be decomposed or not. At least one of them
+  // should always be set. Depending on the service this message is used in, it
+  // is ok too enforce the same option always.
+  oneof specification {
+    DecompLTLSpecification decomp_specification = 1;
+    LTLSpecification formula_specification = 2;
+  }
+  // The solution form the Neural Synthesis Tool.
+  NeuralLTLSynSolution solution = 3;
+}
+
+service GenericLTLSynthesis {
+  // Setup call, which is typically called before the first model checking call
+  // has happened.
+  rpc Setup(SetupRequest) returns (SetupResponse) {}
+  // Call to find out the identity and functionality of the server, i.e. the
+  // tool that is running the server and what it is supposed to do.
+  rpc Identify(IdentificationRequest) returns (IdentificationResponse) {}
+  // Call to synthesize a single LTL specification
+  rpc Synthesize(LTLSynProblem) returns (LTLSynSolution) {}
+  // Call to synthesize a stream of LTL specifications. Same order  of problems
+  // and solutions is assumed
+  rpc SynthesizeStream(stream LTLSynProblem) returns (stream LTLSynSolution) {}
+}
+
+service GenericNeuralLTLSynthesis {
+  // Setup call, which is typically called before the first model checking call
+  // has happened.
+  rpc Setup(SetupRequest) returns (SetupResponse) {}
+  // Call to find out the identity and functionality of the server, i.e. the
+  // tool that is running the server and what it is supposed to do.
+  rpc Identify(IdentificationRequest) returns (IdentificationResponse) {}
+  // Call to synthesize a single LTL specification
+  rpc Synthesize(LTLSynProblem) returns (NeuralLTLSynSolution) {}
+  // Call to synthesize a stream of LTL specifications. Same order  of problems
+  // and solutions is assumed
+  rpc SynthesizeStream(stream LTLSynProblem)
+      returns (stream NeuralLTLSynSolution) {}
+}

@@ -2,12 +2,11 @@
 
 import sly
 
-from ..data.ast import BinaryAST
-from .ltl_lexer import LTLPrefixLexer, LTLInfixLexer
+from ..dtypes.binary_ast import BinaryAST
+from .ltl_lexer import LTLInfixLexer, LTLPrefixLexer
 
 
 class LTLPrefixParser(sly.Parser):
-
     tokens = LTLPrefixLexer.tokens
     precedence = (
         ("right", EQUIV, IMPL),
@@ -50,7 +49,6 @@ class LTLPrefixParser(sly.Parser):
 
 
 class LTLInfixParser(sly.Parser):
-
     tokens = LTLInfixLexer.tokens
     precedence = (
         ("right", EQUIV, IMPL),

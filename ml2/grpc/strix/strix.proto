@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "ml2/grpc/ltl/ltl_syn.proto";
+import "ml2/grpc/tools/tools.proto";
+
+// Strix is a tool for reactive LTL synthesis combining a direct translation of
+// LTL formulas into deterministic parity automata (DPA) and an efficient,
+// multi-threaded explicit state solver for parity games.
+service Strix {
+  // Setup call, which is typically called before the first model checking call
+  // has happened.
+  rpc Setup(SetupRequest) returns (SetupResponse) {}
+  // Call to find out the identity and functionality of the server, i.e. the
+  // tool that is running the server and what it is supposed to do.
+  rpc Identify(IdentificationRequest) returns (IdentificationResponse) {}
+  // Call to synthesize a single LTL specification
+  rpc Synthesize(LTLSynProblem) returns (LTLSynSolution) {}
+  // Call to synthesize a stream of LTL specifications. Same order  of problems
+  // and solutions is assumed
+  rpc SynthesizeStream(stream LTLSynProblem) returns (stream LTLSynSolution) {}
+}

@@ -11,7 +11,7 @@ ML2: Machine Learning for Mathematics and Logics
     :target: https://github.com/reactive-systems/ml2/blob/main/LICENSE
 
 
-ML2 is an open source Python library for machine learning research on mathematical and logical reasoning problems. The library includes the (re-)implementation of the research papers `Teaching Temporal Logics to Neural Networks <https://iclr.cc/virtual/2021/poster/3332>`_ and `Neural Circuit Synthesis from Specification Patterns <https://proceedings.neurips.cc/paper/2021/file/8230bea7d54bcdf99cdfe85cb07313d5-Paper.pdf>`_. So far, the focus of ML2 is on propositional and linear-time temporal logic (LTL) and sequence-to-sequence models, such as the `Transformer <https://arxiv.org/abs/1706.03762>`_ and `hierarchical Transformer <https://arxiv.org/abs/2006.09265>`_. ML2 is actively developed at `CISPA Helmholtz Center for Information Security <https://cispa.de/en>`_.
+ML2 is an open source Python library for machine learning research on mathematical and logical reasoning problems. The library includes the (re-)implementation of the research papers `Teaching Temporal Logics to Neural Networks <https://iclr.cc/virtual/2021/poster/3332>`_ and `Neural Circuit Synthesis from Specification Patterns <https://proceedings.neurips.cc/paper/2021/file/8230bea7d54bcdf99cdfe85cb07313d5-Paper.pdf>`_. So far, the focus of ML2 is on propositional and linear-time temporal logic (LTL) and transformer architectures. ML2 is actively developed at `CISPA Helmholtz Center for Information Security <https://cispa.de/en>`_.
 
 
 Requirements
@@ -20,7 +20,7 @@ Requirements
 - `Docker <https://www.docker.com>`_
 - `Python 3.8 <https://www.python.org/dev/peps/pep-0569/>`_
 
-Note on Docker: For data generation, evaluation, and benchmarking ML2 uses a variety of research tools (e.g. SAT solvers, model checker, and synthesis tools). For ease of use, each tool is encapsulated in a separate Docker container that is automatically pulled and launched when the tool is needed. Thus, ML2 requires Docker to be installed and running.
+Note on Docker: For data generation, evaluation, and benchmarking ML2 uses a variety of research tools (e.g. SAT solvers, model checkers, and synthesis tools). For ease of use, each tool is encapsulated in a Docker container that is automatically pulled and started when the tool is needed. Thus, ML2 requires Docker to be installed and running.
 
 Installation
 ------------
@@ -62,16 +62,16 @@ To train a hierarchical Transformer with default parameters:
 
 .. code:: shell
 
-    python -m ml2.ltl.ltl_syn.ltl_syn_hier_transformer_experiment train
+    python -m ml2.experiment.run configs/ltl-syn/neurips21/ht.json
 
 Evaluation
 ~~~~~~~~~~
 
-To evaluate the hierarchical Transformer from our paper:
+To evaluate a hierarchical Transformer trained on the circuit synthesis task:
 
 .. code:: shell
 
-    python -m ml2.ltl.ltl_syn.ltl_syn_hier_transformer_experiment eval -n hier-transformer-0`
+    python -m ml2.experiment.run configs/ltl-syn/neurips21/ht-sem-eval.json`
 
 Datasets and Data Generation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -108,13 +108,13 @@ To train a Transformer with default parameters on the trace generation problem:
 
 .. code:: shell
 
-    python -m ml2.ltl.ltl_sat.ltl_sat_transformer_experiment train
+    python -m ml2.experiment.run configs/ltl-strace/iclr21/t.json
 
 For the propositional satisfiability experiment:
 
 .. code:: shell
 
-    python -m ml2.prop.prop_sat_transformer_experiment train
+    python -m ml2.experiment.run configs/prop-sat/iclr21/t.json
 
 Evaluation
 ~~~~~~~~~~
@@ -123,7 +123,7 @@ To evaluate a Transformer trained on the trace generation problem:
 
 .. code:: shell
 
-    python -m ml2.ltl.ltl_sat.ltl_sat_transformer_experiment eval -n hier-transformer-0`
+    python -m ml2.experiment.run configs/ltl-strace/iclr21/t-sem-eval.json`
 
 How to Cite
 ~~~~~~~~~~~

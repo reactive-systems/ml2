@@ -1,37 +1,54 @@
 """Common functionality for synthesis data generation"""
 
 import argparse
-from asyncio import Event
 import csv
-import json
 import logging
 import os
-from tqdm import tqdm
 
 import numpy as np
 import ray
 
 from ... import aiger
-from .ltl_syn_data import curriculum_sample_to_csv_row, sample_to_csv_row
+from ...datasets.utils import to_csv_str
+from ..ltl_spec import DecompLTLSpec
+from .ltl_syn_dataset import curriculum_sample_to_csv_row
+from .ltl_syn_problem import LTLSynProblem, LTLSynSolution
 
 logger = logging.getLogger(__name__)
 logger.setLevel("INFO")
 
 
+def sample_to_csv_row(sample: dict):
+    assumptions = ",".join(sample["assumptions"])
+    guarantees = ",".join(sample["guarantees"])
+    inputs = ",".join(sample["inputs"])
+    outputs = ",".join(sample["outputs"])
+    realizable = sample["realizable"]
+    circuit = to_csv_str(sample["circuit"])
+    return [assumptions, guarantees, inputs, outputs, realizable, circuit]
+
+
+def sample_to_csv_fields(sample: dict):
+    spec = DecompLTLSpec.from_dict(sample)
+    sol: LTLSynSolution = LTLSynSolution.from_csv_fields(sample)  # type: ignore
+    prob: LTLSynProblem = LTLSynProblem(spec, sol)
+    return prob.to_csv_fields(notation="infix")
+
+
 def add_ltl_syn_data_gen_args(parser):
-    parser.add_argument(
-        "--add-to-wandb", action="store_true", help="add data to Weights and Biases"
-    )
     parser.add_argument(
         "--all-aps",
         action="store_true",
         help=("circuits incorporate all AP contained in the set" "of guarantees"),
     )
     parser.add_argument(
-        "--batch-size", type=int, default=10, help="size of batches provided to worker"
+        "-c", "--curriculum", action="store_true", help="generate data for curriculum learning"
     )
     parser.add_argument(
-        "-c", "--curriculum", action="store_true", help="generate data for curriculum learning"
+        "--max-property-size",
+        type=int,
+        default=25,
+        help=("max size for each properties"),
     )
     parser.add_argument(
         "--max-frac-ands",
@@ -40,8 +57,6 @@ def add_ltl_syn_data_gen_args(parser):
         metavar="max",
         help=("maximal fraction of circuits with" "0,1,2,... ANG gates"),
     )
-    parser.add_argument("--name", type=str, metavar="NAME", required=True, help="dataset name")
-    parser.add_argument("-n", "--num-samples", type=int, default=100, help="number of samples")
     parser.add_argument(
         "--num-ands",
         action=argparse_min_max(),
@@ -90,11 +105,7 @@ def add_ltl_syn_data_gen_args(parser):
         metavar=("min", "max"),
         help="number of variables in AIGER circuit",
     )
-    parser.add_argument("--num-workers", type=int, default=6, help="number of workers")
     parser.add_argument("--realizable-frac", default=1.0, type=float)
-    parser.add_argument(
-        "-u", "--upload", action="store_true", help="upload generated data to GCP storage bucket"
-    )
 
 
 def argparse_min_max(default_min=0, default_max=None):
@@ -187,15 +198,24 @@ def csv_dataset_writer(
         filepaths.append(filepath)
         file = open(filepath, "w", newline="")
         files.append(file)
-        file_writer = csv.writer(file, quoting=csv.QUOTE_ALL)
         if curriculum:
-            file_writer.writerow(
-                ["properties", "type", "inputs", "outputs", "realizable", "circuits"]
-            )
+            fieldnames = ["properties", "type", "inputs", "outputs", "realizable", "circuits"]
         else:
-            file_writer.writerow(
-                ["assumptions", "guarantees", "inputs", "outputs", "realizable", "circuit"]
-            )
+            fieldnames = [
+                "assumptions",
+                "guarantees",
+                "id_DecompLTLSpec",
+                "inputs",
+                "outputs",
+                "realizable",
+                "circuit",
+                "id_AIGERCircuit",
+                "syn_time",
+            ]
+        file_writer = csv.DictWriter(
+            file, extrasaction="ignore", fieldnames=fieldnames, quoting=csv.QUOTE_ALL
+        )
+        file_writer.writeheader()
         file_writers.append(file_writer)
 
     file_probs = [train_frac, val_frac, test_frac]
@@ -207,10 +227,11 @@ def csv_dataset_writer(
         index = np.random.choice(range(len(file_probs)), p=file_probs)
         file_writer = file_writers[index]
         if curriculum:
+            raise NotImplementedError
             row = curriculum_sample_to_csv_row(sample)
+            file_writer.writerow(row)  # TODO dict instead of list
         else:
-            row = sample_to_csv_row(sample)
-        file_writer.writerow(row)
+            file_writer.writerow(sample_to_csv_fields(sample))
         file_counts[index] += 1
         if file_counts[index] == file_target_counts[index]:
             files[index].close()
@@ -228,62 +249,31 @@ def csv_dataset_writer(
 @ray.remote
 def csv_file_writer(queue, filepath: str, curriculum: bool = False) -> None:
     csv_file = open(filepath, "w", newline="")
-    file_writer = csv.writer(csv_file, quoting=csv.QUOTE_ALL)
     if curriculum:
-        file_writer.writerow(["properties", "type", "inputs", "outputs", "realizable", "circuits"])
+        fieldnames = ["properties", "type", "inputs", "outputs", "realizable", "circuits"]
     else:
-        file_writer.writerow(
-            ["assumptions", "guarantees", "inputs", "outputs", "realizable", "circuit"]
-        )
+        fieldnames = [
+            "assumptions",
+            "guarantees",
+            "id_DecompLTLSpec",
+            "inputs",
+            "outputs",
+            "realizable",
+            "circuit",
+            "id_AIGERCircuit",
+            "syn_time",
+        ]
+    file_writer = csv.DictWriter(
+        csv_file, extrasaction="ignore", fieldnames=fieldnames, quoting=csv.QUOTE_ALL
+    )
+    file_writer.writeheader()
     sample = queue.get(block=True)
     while sample:
         if curriculum:
+            raise NotImplementedError
             row = curriculum_sample_to_csv_row(sample)
+            file_writer.writerow(row)  # TODO dict instead of list
         else:
-            row = sample_to_csv_row(sample)
-        file_writer.writerow(row)
+            file_writer.writerow(sample_to_csv_fields(sample))
         sample = queue.get(block=True)
     csv_file.close()
-
-
-def progress_bar(progress_actor, num_samples, stats_filepath=None):
-    pbar = tqdm(total=num_samples, desc="Generated samples", unit="sample")
-    progress_actor.update.remote("samples", 0)
-    while True:
-        progress = ray.get(progress_actor.wait_for_update.remote())
-        pbar.update(progress["samples"] - pbar.n)
-        postfix_dict = dict(progress)
-        postfix_dict.pop("samples", None)
-        pbar.set_postfix(postfix_dict)
-        if progress["samples"] >= num_samples:
-            if stats_filepath:
-                with open(stats_filepath, "w") as stats_file:
-                    progress["elapsed"] = pbar.format_dict["elapsed"]
-                    json.dump(progress, stats_file, indent=2)
-            pbar.close()
-            return
-
-
-@ray.remote
-class ProgressActor:
-    def __init__(self):
-        self.progress = {}
-        self.event = Event()
-
-    def update(self, key, delta=1):
-        if key in self.progress:
-            self.progress[key] += delta
-            self.event.set()
-        else:
-            self.progress[key] = delta
-            self.progress = {key: self.progress[key] for key in sorted(self.progress.keys())}
-            self.event.set()
-
-    def update_multi(self, keys, delta=1):
-        for key in keys:
-            self.update(key, delta)
-
-    async def wait_for_update(self):
-        await self.event.wait()
-        self.event.clear()
-        return self.progress

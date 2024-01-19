@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "ml2/grpc/ltl/ltl_mc.proto";
+import "ml2/grpc/tools/tools.proto";
+
+// The NuSMV model checker. https://nusmv.fbk.eu
+service NuSMV {
+  // Setup call, which is typically called before the first model checking call
+  // has happened.
+  rpc Setup(SetupRequest) returns (SetupResponse) {}
+  // Call to find out the identity and functionality of the server, i.e. the
+  // tool that is running the server and what it is supposed to do.
+  rpc Identify(IdentificationRequest) returns (IdentificationResponse) {}
+  // Call to model-check a single problem
+  rpc ModelCheck(LTLMCProblem) returns (LTLMCSolution) {}
+  // Call to model-check a stream of problems. Same order of problems
+  // and solutions is assumed
+  rpc ModelCheckStream(stream LTLMCProblem) returns (stream LTLMCSolution) {}
+}

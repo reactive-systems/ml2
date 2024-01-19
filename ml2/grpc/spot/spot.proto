@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+import "ml2/grpc/aiger/aiger.proto";
+import "ml2/grpc/ltl/ltl.proto";
+import "ml2/grpc/ltl/ltl_equiv.proto";
+import "ml2/grpc/ltl/ltl_mc.proto";
+import "ml2/grpc/ltl/ltl_sat.proto";
+import "ml2/grpc/ltl/ltl_syn.proto";
+import "ml2/grpc/ltl/ltl_trace_mc.proto";
+import "ml2/grpc/mealy/mealy.proto";
+import "ml2/grpc/system/system.proto";
+import "ml2/grpc/tools/tools.proto";
+
+message RandLTLArgs {
+  int32 num_formulas = 1;
+  int32 num_aps = 2;
+  repeated string aps = 3;
+  bool allow_dups = 4;
+  string output = 5;
+  int32 seed = 6;
+  int32 simplify = 7;
+  int32 tree_size = 8;
+  string boolean_priorities = 9;
+  string ltl_priorities = 10;
+  string sere_priorities = 11;
+}
+
+
+
+// Spot: a platform for LTL and ω-automata manipulation
+// https://spot.lre.epita.fr/
+service Spot {
+  // Setup call, which is typically called before the first model checking call
+  // has happened.
+  rpc Setup(SetupRequest) returns (SetupResponse) {}
+  // Call to find out the identity and functionality of the server, i.e. the
+  // tool that is running the server and what it is supposed to do.
+  rpc Identify(IdentificationRequest) returns (IdentificationResponse) {}
+  // Call to model-check a single problem
+  rpc ModelCheck(LTLMCProblem) returns (LTLMCSolution) {}
+  // Call to model-check a stream of problems. Same order  of problems
+  // and solutions is assumed
+  rpc ModelCheckStream(stream LTLMCProblem) returns (stream LTLMCSolution) {}
+  // Call to synthesize a single LTL specification
+  rpc Synthesize(LTLSynProblem) returns (LTLSynSolution) {}
+
+
+
+  rpc CheckEquiv(LTLEquivProblem)
+      returns (LTLEquivSolution) {}
+
+  rpc CheckSat(LTLSatProblem)
+      returns (LTLSatSolution) {}
+
+  rpc MCTrace(LTLTraceMCProblem)
+      returns (LTLTraceMCSolution) {}
+
+  rpc RandLTL(RandLTLArgs) returns (stream LTLFormula) {}
+
+  rpc aag2mealy(AigerCircuit)
+      returns (MealyMachine) {}
+
+  rpc mealy2aag(MealyMachine)
+      returns (AigerCircuit) {}
+      
+  rpc extractTransitions(MealyMachine)
+      returns (MealyTransitions) {}
+
+}

@@ -1,17 +1,17 @@
 """A generator that generates a json file of LTL patterns based on a grammar"""
 
 import argparse
-from asyncio import Event
-from itertools import product, permutations
 import json
 import logging
 import os.path
 import random
-from tqdm import tqdm
+from asyncio import Event
+from itertools import permutations, product
 
 import ray
+from tqdm import tqdm
 
-from ....data.utils import int_to_abbrev_str
+from ....datasets.utils import int_to_abbrev_str
 from ....tools import strix
 from ...ltl_syn import LTLSynStatus
 from .ltl_spec_pattern_grammar import LTLSpecPatternGrammar

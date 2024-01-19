@@ -1,1 +1,1 @@
-from .aalta import Aalta
+from .aalta import Aalta, AaltaTraceMC

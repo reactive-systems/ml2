@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+import "ml2/grpc/ltl/ltl_syn.proto";
+import "ml2/grpc/tools/tools.proto";
+
+// message SetupMessage {
+//   int32 mc_port = 1;
+//   int32 beam_size = 2;
+//   string model = 3;
+//   string verifier = 4;
+//   int32 batch_size = 5;
+//   float alpha = 6;
+//   int32 num_properties = 7;
+//   int32 length_properties = 8;
+// }
+
+service NeuroSynt {
+  // Setup call, which is typically called before the first model checking call
+  // has happened.
+  rpc Setup(SetupRequest) returns (SetupResponse) {}
+  // Call to find out the identity and functionality of the server, i.e. the
+  // tool that is running the server and what it is supposed to do.
+  rpc Identify(IdentificationRequest) returns (IdentificationResponse) {}
+  // Call to synthesize a single LTL specification
+  rpc Synthesize(LTLSynProblem) returns (NeuralLTLSynSolution) {}
+  // Call to synthesize a stream of LTL specifications. Same order  of problems
+  // and solutions is assumed
+  rpc SynthesizeStream(stream LTLSynProblem)
+      returns (stream NeuralLTLSynSolution) {}
+  // Call to synthesize a stream of LTL specifications batch-wise. Same order is
+  // not guaranteed
+  rpc SynthesizeBatch(stream LTLSynProblem)
+      returns (stream NeuralLTLSynSolutionSpecPair) {}
+}

@@ -1,15 +1,14 @@
 """gRPC Server that checks the satisfiability of an LTL formula using Aalta"""
 
 import argparse
-from concurrent import futures
 import logging
 import time
+from concurrent import futures
 
 import grpc
 
-from . import aalta_pb2_grpc
+from ...grpc.aalta import aalta_pb2, aalta_pb2_grpc
 from .aalta_wrapper import aalta_wrapper_str
-from ..protos import ltl_pb2
 
 logger = logging.getLogger("Aalta gRPC Server")
 
@@ -24,7 +23,7 @@ class AaltaServicer(aalta_pb2_grpc.AaltaServicer):
         )
         end = time.time()
         print(f"Checking Satisfiability took {end - start} seconds")
-        return ltl_pb2.LTLSatSolution(
+        return aalta_pb2.LTLSatSolutionAalta(
             status=solution["status"].value, trace=solution.get("trace", None)
         )
 

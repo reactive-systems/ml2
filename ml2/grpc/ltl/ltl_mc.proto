@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+import "google/protobuf/duration.proto";
+
+import "ml2/grpc/aiger/aiger.proto";
+import "ml2/grpc/ltl/ltl.proto";
+import "ml2/grpc/mealy/mealy.proto";
+import "ml2/grpc/tools/tools.proto";
+import "ml2/grpc/trace/trace.proto";
+
+// Mirrors ml2.ltl.ltl_mc.ltl_mc_status.LTLMCStatus
+enum LTLMCStatus {
+  // Default Value, additional Information should be given if set on purpose
+  LTLMCSTATUS_UNSPECIFIED = 0;
+  // Signals that the system satisfies the LTL Specification
+  LTLMCSTATUS_SATISFIED = 1;
+  // Signals that the system violates the LTL Specification
+  LTLMCSTATUS_VIOLATED = 2;
+  // Signals that some error happened during computation. Additional
+  // information should be given.
+  LTLMCSTATUS_ERROR = 3;
+  // Signals that the model checking timed out.
+  LTLMCSTATUS_TIMEOUT = 4;
+  // Signals that the system was invalid.
+  LTLMCSTATUS_INVALID = 5;
+  // Signals that model checking was not successful, However no error, timeout,
+  // invalid happened. Additional Information should be given.
+  LTLMCSTATUS_NONSUCCESS = 6;
+}
+
+message LTLMCProblem {
+  // Defines run- and tool-specific parameters. As Map (Dict in Python).
+  // Typical examples are threads, timeouts etc. Can be empty.
+  map<string, string> parameters = 1;
+  // A specification can either be decomposed or not. At least one of them
+  // should always be set. Depending on the service this message is used in, it
+  // is ok too enforce the same option always.
+  oneof specification {
+    DecompLTLSpecification decomp_specification = 2;
+    LTLSpecification formula_specification = 3;
+  }
+  // A system can either be an AIGER circuit or a Mealy Machine. Depending on
+  // the service this message is used in, it is ok too enforce the same option
+  // always.
+  oneof system {
+    AigerCircuit circuit = 4;
+    MealyMachine mealy_machine = 5;
+  }
+  // Shows, whether the specification has been found to be realizable or
+  // unrealizable.
+  bool realizable = 6;
+}
+
+message LTLMCSolution {
+  // A status that includes useful information about the run. For some status
+  // values, additional information should be given in detailed_status.
+  LTLMCStatus status = 1;
+  // Here additional information should be supplied if the status value requires
+  // more details. For example an error trace for ERROR or a reason for
+  // NONSUCCESS
+  string detailed_status = 2;
+  // Tool that created the response
+  string tool = 3;
+  // A trace, proving the violation of the specification. Should be given if
+  // status is VIOLATED
+  optional Trace counterexample = 4;
+  // How long the tool took to create the result.
+  optional google.protobuf.Duration time = 5;
+}
+
+service GenericLTLModelChecker {
+  // Setup call, which is typically called before the first model checking call
+  // has happened.
+  rpc Setup(SetupRequest) returns (SetupResponse) {}
+  // Call to find out the identity and functionality of the server, i.e. the
+  // tool that is running the server and what it is supposed to do.
+  rpc Identify(IdentificationRequest) returns (IdentificationResponse) {}
+  // Call to model-check a single problem
+  rpc ModelCheck(LTLMCProblem) returns (LTLMCSolution) {}
+  // Call to model-check a stream of problems. Same order  of problems
+  // and solutions is assumed
+  rpc ModelCheckStream(stream LTLMCProblem) returns (stream LTLMCSolution) {}
+}

@@ -7,28 +7,28 @@ import logging
 import os.path
 import re
 import sys
+from typing import Dict, List
 
 import numpy as np
-
 import ray
+from numpy.random import default_rng
 from ray.util.queue import Queue
 
 from ... import aiger
-from ...data import add_data_gen_args
-from ...tools.bosy import add_bosy_args, bosy_worker_fn
-from ...tools.strix import add_strix_args, strix_worker_fn
-from ..ltl_spec import LTLSpecPatternData
-from .ltl_syn_status import LTLSynStatus
-from .ltl_syn_data import LTLSynData, LTLSynSplitData
+from ...data_gen import ProgressActor, add_dist_data_gen_args, progress_bar
+from ...tools.bosy import add_bosy_args, bosy_worker_fn_dict
+from ...tools.strix import add_strix_args
+from ...tools.strix.strix_worker import strix_worker_fn_dict
+from ..ltl_spec import LTLSpecPatternCSVDataset, LTLSpecPatternDataset
 from .ltl_syn_data_gen_common import (
+    add_ltl_syn_data_gen_args,
     check_lower_bounds,
     check_upper_bounds,
     csv_dataset_writer,
     csv_file_writer,
-    add_ltl_syn_data_gen_args,
-    progress_bar,
-    ProgressActor,
 )
+from .ltl_syn_dataset import LTLSynDataset, LTLSynSplitDataset
+from .ltl_syn_status import LTLSynStatus
 
 ray.init(dashboard_host="0.0.0.0")
 # ray.init(address='auto')
@@ -43,6 +43,17 @@ def translate_substrings(string: str, table: dict):
     return re.sub(
         "|".join(re.escape(original) for original in table), lambda k: table[k.group(0)], string
     )
+
+
+def weighted_random(aps: List[str], random_weighted: Dict[str, float], number: int):
+    probs = []
+    for a in aps:
+        probs.append(random_weighted[a] if a in random_weighted.keys() else 1)
+    frac = 1 / sum(probs)
+    probs = [p * frac for p in probs]
+
+    rng = default_rng()
+    return list(rng.choice(aps, number, replace=False, p=probs))
 
 
 @ray.remote
@@ -84,9 +95,8 @@ class DataSetActor:
         return self.counters["valid"] + self.counters["processing"] < self.params["num_samples"]
 
     def add_assumption(self, problem: dict):
-        choices = self.assumptions_ids
+        choices = list(self.assumptions_ids)
         if self.params["unique_assumptions"]:
-            choices = list(choices)
             for idx in problem["assumptions_ids"]:
                 choices.remove(idx)
         idx = np.random.choice(choices)
@@ -104,11 +114,20 @@ class DataSetActor:
                     choices.remove(idx)
                     if choices:
                         idx = np.random.choice(choices)
+                        assumption = dict(self.assumptions[idx])
+                        continue
                     else:
-                        logger.error("No assumption patterns left")
-                        break
-                    assumption = dict(self.assumptions[idx])
-                    continue
+                        logger.info("No assumption patterns left to rename")
+                        try:
+                            resampled_inputs = np.random.choice(
+                                self.inputs, len(assumption["inputs"]), replace=False
+                            ).tolist()
+                            resampled_outputs = np.random.choice(
+                                self.outputs, len(assumption["outputs"]), replace=False
+                            ).tolist()
+                        except ValueError as e:
+                            logger.error(e)
+                            raise ValueError
                 translation_table = dict(
                     zip(
                         assumption["inputs"] + assumption["outputs"],
@@ -136,12 +155,16 @@ class DataSetActor:
         # dict provides a deep copy
         guarantee = dict(self.guarantees[idx])
         if self.params["resample_aps"]:
-            resampled_inputs = np.random.choice(
-                self.inputs, len(guarantee["inputs"]), replace=False
-            ).tolist()
-            resampled_outputs = np.random.choice(
-                self.outputs, len(guarantee["outputs"]), replace=False
-            ).tolist()
+            resampled_inputs = weighted_random(
+                self.inputs,
+                {input: self.params["ap_bias"] for input in problem["inputs"]},
+                len(guarantee["inputs"]),
+            )
+            resampled_outputs = weighted_random(
+                self.outputs,
+                {output: self.params["ap_bias"] for output in problem["outputs"]},
+                len(guarantee["outputs"]),
+            )
 
             translation_table = dict(
                 zip(
@@ -180,7 +203,7 @@ class DataSetActor:
         for _ in range(batch_size):
             if self.open:
                 parent_problem = self.open.pop(0)
-                if parent_problem["status"] == LTLSynStatus.UNREALIZABLE:
+                if parent_problem["status"] == LTLSynStatus("unrealizable"):
                     if parent_problem["num_assumption_trials"] == 0:
                         problem = copy.deepcopy(parent_problem)
                         if not self.params["curriculum"]:
@@ -227,13 +250,13 @@ class DataSetActor:
             max_num_assumptions = self.params["num_assumptions"][1]
             num_assumption_trials = problem["num_assumption_trials"]
             max_num_assumption_trials = self.params["max_assumption_trials"]
-            if status == LTLSynStatus.REALIZABLE and (
+            if status == LTLSynStatus("realizable") and (
                 not max_num_guarantees or num_guarantees < max_num_guarantees
             ):
                 problem["realizable"] = 1
                 self.open.append(problem)
             elif (
-                status == LTLSynStatus.UNREALIZABLE
+                status == LTLSynStatus("unrealizable")
                 and (not max_num_assumptions or num_assumptions < max_num_assumptions)
                 and (
                     not max_num_assumption_trials
@@ -243,9 +266,9 @@ class DataSetActor:
                 problem["realizable"] = 0
                 self.open.append(problem)
             elif (
-                status == LTLSynStatus.UNREALIZABLE
-                or status == LTLSynStatus.TIMEOUT
-                or (status == LTLSynStatus.REALIZABLE and num_guarantees == max_num_guarantees)
+                status == LTLSynStatus("unrealizable")
+                or status == LTLSynStatus("timeout")
+                or (status == LTLSynStatus("realizable") and num_guarantees == max_num_guarantees)
             ):
                 if 0.0 < self.prob_realizable < 1.0:
                     max_num_realizable = int(self.params["num_samples"] * self.prob_realizable)
@@ -260,17 +283,17 @@ class DataSetActor:
                 choose_realizable = np.random.choice(
                     [True, False], p=[self.prob_realizable, 1.0 - self.prob_realizable]
                 )
-                if status == LTLSynStatus.TIMEOUT:
+                if status == LTLSynStatus("timeout"):
                     problem["realizable"] = -1
                     self.timeouts_queue.put(problem)
                     self.progress_actor.update.remote("timeout")
-                if not choose_realizable and status != LTLSynStatus.UNREALIZABLE:
+                if not choose_realizable and status != LTLSynStatus("unrealizable"):
                     continue
                 if not choose_realizable and "unrealizable_parent" in problem:
                     problem = problem["unrealizable_parent"]
                 if choose_realizable and status in (
-                    LTLSynStatus.UNREALIZABLE,
-                    LTLSynStatus.TIMEOUT,
+                    LTLSynStatus("unrealizable"),
+                    LTLSynStatus("timeout"),
                 ):
                     problem = problem["parent"]
                 if not problem:
@@ -325,7 +348,7 @@ class DataSetActor:
                     self.counters["realizable"] += 1
                     self.progress_actor.update.remote("realizable")
                 self.progress_actor.update.remote("samples")
-            elif status == LTLSynStatus.ERROR:
+            elif status == LTLSynStatus("error"):
                 self.progress_actor.update.remote("error")
                 logger.warning("Error occurred for problem %s", problem)
             else:
@@ -335,13 +358,32 @@ class DataSetActor:
 
 
 def main(args):
+    # ltl_spec_patterns = LTLSpecPatternDataset.load(args.patterns, project="ltl-spec")
+    # guarantees = ltl_spec_patterns.guarantees
+    # assumptions = ltl_spec_patterns.assumptions
 
-    ltl_spec_patterns = LTLSpecPatternData.load(args.patterns)
-    guarantees = ltl_spec_patterns.guarantees
-    assumptions = ltl_spec_patterns.assumptions
+    inputs = ["i" + str(n) for n in range(0, args.inputs)]
+    outputs = ["o" + str(n) for n in range(0, args.outputs)]
+
+    ltl_spec_patterns = LTLSpecPatternCSVDataset.load(name=args.patterns, project=args.project)
+    ltl_spec_patterns.filter(
+        ast_size=(None, args.max_property_size),
+        num_inputs=(None, args.inputs),
+        num_outputs=(None, args.outputs),
+        inplace=True,
+    )
+
+    assumptions = [
+        {"pattern" if k == "formula" else k: v for k, v in s.to_dict().items()}
+        for s in ltl_spec_patterns["assumptions"].generator()
+    ]
+    guarantees = [
+        {"pattern" if k == "formula" else k: v for k, v in s.to_dict().items()}
+        for s in ltl_spec_patterns["guarantees"].generator()
+    ]
 
     # create folder and files
-    folder_path = LTLSynData.local_path(args.name)
+    folder_path = LTLSynDataset.local_path_from_name(args.name, project="ltl-syn")
     if not os.path.isdir(folder_path):
         os.makedirs(folder_path)
         logger.info("Created folder %s", folder_path)
@@ -359,8 +401,8 @@ def main(args):
     # pylint: disable=no-member
     ds_actor = DataSetActor.remote(
         guarantees,
-        args.inputs,
-        args.outputs,
+        inputs,
+        outputs,
         progress_actor,
         args_dict,
         samples_queue,
@@ -380,7 +422,7 @@ def main(args):
     timeouts_writer_result = csv_file_writer.remote(timeouts_queue, timeouts_file, args.curriculum)
     if args.tool == "bosy":
         worker_results = [
-            bosy_worker_fn.remote(
+            bosy_worker_fn_dict.remote(
                 ds_actor,
                 id=i,
                 optimize=args.bosy_optimize,
@@ -391,7 +433,7 @@ def main(args):
         ]
     elif args.tool == "strix":
         worker_results = [
-            strix_worker_fn.remote(
+            strix_worker_fn_dict.remote(
                 ds_actor,
                 id=i,
                 port=50051 + i,
@@ -407,7 +449,7 @@ def main(args):
     ray.get(dataset_writer_result)
     timeouts_queue.put(None)
     ray.get(timeouts_writer_result)
-    split_dataset = LTLSynSplitData.load(args.name)
+    split_dataset = LTLSynSplitDataset.load(args.name, project="ltl-syn")
     # stats = split_dataset.stats(['train', 'val', 'test'])
     # stats_file = os.path.join(folder_path, 'circuit-stats.json')
     # write_stats(stats, stats_file)
@@ -423,12 +465,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Generates a synthesis dataset from a set of assumption patterns and a set of guarantee patterns"
     )
-    add_data_gen_args(parser)
+    add_dist_data_gen_args(parser)
+    parser.set_defaults(project="ltl-spec")
     add_ltl_syn_data_gen_args(parser)
     add_strix_args(parser)
     add_bosy_args(parser)
-    parser.add_argument("--inputs", nargs="*", default=["i0", "i1", "i2", "i3", "i4"])
-    parser.add_argument("--outputs", nargs="*", default=["o0", "o1", "o2", "o3", "o4"])
+    parser.add_argument("--inputs", type=int, default=5)
+    parser.add_argument("--outputs", type=int, default=5)
     parser.add_argument(
         "--no-unique-assumptions",
         action="store_false",
@@ -458,8 +501,21 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
-        "-p", "--patterns", type=str, default="scp-0", metavar="name", help=("name of patterns")
+        "--ap-bias",
+        type=float,
+        default=1.0,
+        metavar="ap_bias",
+        help=("When renaming aps, how much should existing aps be biased. Default (no bias) is 1"),
     )
+    parser.add_argument(
+        "-p",
+        "--patterns",
+        type=str,
+        default="scp-0",
+        metavar="name",
+        help=("name of pattern dataset"),
+    )
+
     parser.add_argument(
         "--resample-aps", action="store_true", help="resample atomic propositions in guarantees"
     )

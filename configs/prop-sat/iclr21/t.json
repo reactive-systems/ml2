@@ -1,0 +1,84 @@
+{
+  "name": "t",
+  "auto_version": true,
+  "project": "prop-sat",
+  "upload": false,
+  "pipeline": {
+    "type": "TFTransformerPipeline",
+    "custom_pos_enc": true,
+    "model_config": {
+      "alpha": 1.0,
+      "beam_size": 3,
+      "d_embed_enc": 128,
+      "d_embed_dec": 64,
+      "d_ff": 512,
+      "dropout": 0.1,
+      "dtype_float": "float32",
+      "dtype_int": "int32",
+      "ff_activation": "relu",
+      "num_heads": 4,
+      "num_layers": 6
+    },
+    "input_tokenizer": {
+      "type": "ExprToSeqTPETokenizer",
+      "dtype": "PropFormula",
+      "notation": "prefix",
+      "start": false,
+      "eos": false,
+      "pad": 128,
+      "tpe_format": "branch-down",
+      "tpe_pad": 128
+    },
+    "target_tokenizer": {
+      "type": "CatSeqToSeqTokenizer",
+      "dtype": "PropSatSolution",
+      "start": false,
+      "eos": true,
+      "pad": 128
+    },
+    "max_input_length": 128,
+    "max_target_length": 128,
+    "vocab_dataset": "prop-sat/rfa-0/train"
+  },
+  "trainer": {
+    "type": "KerasTrainer",
+    "train_dataset": "prop-sat/rfa-0/train",
+    "val_dataset": {
+      "base": "prop-sat/rfa-0/val",
+      "sample": 1024
+    },
+    "batch_size": 1024,
+    "cache_dataset": true,
+    "checkpoint_monitor": "val_acc_per_seq",
+    "drop_batch_remainder": false,
+    "dtype_float": "float32",
+    "dtype_int": "int32",
+    "initial_steps": 0,
+    "optimizer": {
+      "type": "Adam",
+      "beta_1": 0.9,
+      "beta_2": 0.98,
+      "epsilon": 1e-9,
+      "learning_rate": {
+        "type": "TFTransformerLRSchedule",
+        "d_embed": 128,
+        "warmup_steps": 4000
+      }
+    },
+    "shuffle_on_load": true,
+    "steps": 50000,
+    "stream_to_wandb": false,
+    "tf_shuffle_buffer_size": 0,
+    "val_freq": 100
+  },
+  "evaluation": [
+    {
+      "type": "SupervisedEvalTask",
+      "batch_size": 64,
+      "dataset": {
+        "base": "prop-sat/rfa-0/test",
+        "sample": 1024
+      }
+    }
+  ]
+}
