@@ -49,6 +49,9 @@ service Spot {
   rpc CheckEquiv(LTLEquivProblem)
       returns (LTLEquivSolution) {}
 
+  rpc CheckEquivRenaming(LTLEquivProblem)
+      returns (LTLEquivSolution) {}
+
   rpc CheckSat(LTLSatProblem)
       returns (LTLSatSolution) {}
 

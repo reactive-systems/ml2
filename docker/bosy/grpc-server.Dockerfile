@@ -1,4 +1,4 @@
-ARG CONTAINER_REGISTRY=ghrc.io/reactive-systems/ml2
+ARG CONTAINER_REGISTRY=ghcr.io/reactive-systems/ml2
 
 FROM $CONTAINER_REGISTRY/bosy
 

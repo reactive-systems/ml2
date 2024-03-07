@@ -4,12 +4,17 @@ import logging
 import signal
 import subprocess
 import time
+from copy import deepcopy
 from datetime import datetime
+from itertools import product
 from multiprocessing import Manager, Process
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Set
 
 import spot
 
+from ml2.dtypes.binary_ast import BinaryAST
+
+from ...ltl.ltl_formula import LTLFormula
 from ...ltl.ltl_mc import LTLMCStatus
 from ...ltl.ltl_sat import LTLSatStatus
 from ...ltl.ltl_syn import LTLSynStatus
@@ -146,6 +151,77 @@ def check_sat_with_signal(formula: str, result: dict, simplify: bool = False, ti
         result["trace"] = str(trace)
 
 
+def check_equiv_renaming(formula1: str, formula2: str, result: dict) -> None:
+    NO_CHANGE_TOKEN = "NO_CHANGE_TOKEN"
+
+    start = time.time()
+
+    try:
+
+        def parse(formula: str) -> BinaryAST:
+            return LTLFormula.parse("{0:fp}".format(spot.formula(formula)))
+
+        f1 = parse(formula1)
+        f2 = parse(formula2)
+
+        def aps(formula: BinaryAST) -> Set[str]:
+            return set(x for x in formula.leaves if x not in ["1", "0"])  # for true and false
+
+        if len(aps(f1)) > len(aps(f2)):
+            key_formula = f1
+            value_formula = f2
+        else:
+            key_formula = f2
+            value_formula = f1
+
+        key_aps = aps(key_formula)
+        value_aps = aps(value_formula)
+
+        renames = [
+            list(zip(key_aps, item))
+            for item in product(value_aps.union({NO_CHANGE_TOKEN}), repeat=len(key_aps))
+        ]
+
+        renames = list(
+            filter(
+                lambda l: (
+                    len(set(a[1] for a in l).difference([NO_CHANGE_TOKEN]))
+                    + [a[1] for a in l].count(NO_CHANGE_TOKEN)
+                    == len(key_aps)
+                )
+                and (len(set(a[1] for a in l).difference([NO_CHANGE_TOKEN])) == len(value_aps)),
+                renames,
+            )
+        )
+
+        renames = [{x: (y if y != NO_CHANGE_TOKEN else x) for x, y in el} for el in renames]
+
+        def rename(f, d):
+            f = deepcopy(f)
+            f.rename(d)
+            return f
+
+        spot_f1s = [spot.formula(rename(key_formula, d).to_str("infix")) for d in renames]
+
+        spot_f2 = spot.formula(value_formula.to_str("infix"))
+
+        lcc = spot.language_containment_checker()
+
+        if any(lcc.are_equivalent(spot_f2, spot_f1) for spot_f1 in spot_f1s):
+            end = time.time()
+            result["status"] = "equivalent"
+            result["time"] = end - start
+        else:
+            end = time.time()
+            result["status"] = "inequivalent"
+            result["time"] = end - start
+    except Exception as e:
+        print(e)
+        result["status"] = "error"
+        end = time.time()
+        result["time"] = end - start
+
+
 def check_equiv(formula1: str, formula2: str, result: dict) -> None:
     start = time.time()
 
@@ -161,8 +237,11 @@ def check_equiv(formula1: str, formula2: str, result: dict) -> None:
             end = time.time()
             result["status"] = "inequivalent"
             result["time"] = end - start
-    except Exception:
+    except Exception as e:
+        print(e)
         result["status"] = "error"
+        end = time.time()
+        result["time"] = end - start
 
 
 def mc_trace(formula: str, trace: str, result):

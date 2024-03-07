@@ -41,6 +41,14 @@ def test_spot_equiv():
 
 
 @pytest.mark.docker
+def test_spot_equiv_renaming():
+    spot = Spot()
+    f = LTLFormula.from_str("(F G ! x1) & F x1 & !x2 & x3 & (x4 | !x4) ")
+    g = LTLFormula.from_str("!a & F (b & X G ! b) & c")
+    assert spot.check_equiv_renaming(f, g).equiv
+
+
+@pytest.mark.docker
 def test_spot_not_equiv():
     spot = Spot()
     f = LTLFormula.from_str("a U b")

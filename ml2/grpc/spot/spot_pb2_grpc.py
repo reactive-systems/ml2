@@ -55,6 +55,11 @@ class SpotStub(object):
                 request_serializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivProblem.SerializeToString,
                 response_deserializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivSolution.FromString,
                 )
+        self.CheckEquivRenaming = channel.unary_unary(
+                '/Spot/CheckEquivRenaming',
+                request_serializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivProblem.SerializeToString,
+                response_deserializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivSolution.FromString,
+                )
         self.CheckSat = channel.unary_unary(
                 '/Spot/CheckSat',
                 request_serializer=ml2_dot_grpc_dot_ltl_dot_ltl__sat__pb2.LTLSatProblem.SerializeToString,
@@ -136,6 +141,12 @@ class SpotServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def CheckEquivRenaming(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def CheckSat(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -202,6 +213,11 @@ def add_SpotServicer_to_server(servicer, server):
             ),
             'CheckEquiv': grpc.unary_unary_rpc_method_handler(
                     servicer.CheckEquiv,
+                    request_deserializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivProblem.FromString,
+                    response_serializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivSolution.SerializeToString,
+            ),
+            'CheckEquivRenaming': grpc.unary_unary_rpc_method_handler(
+                    servicer.CheckEquivRenaming,
                     request_deserializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivProblem.FromString,
                     response_serializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivSolution.SerializeToString,
             ),
@@ -344,6 +360,23 @@ class Spot(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/Spot/CheckEquiv',
+            ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivProblem.SerializeToString,
+            ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivSolution.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def CheckEquivRenaming(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Spot/CheckEquivRenaming',
             ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivProblem.SerializeToString,
             ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivSolution.FromString,
             options, channel_credentials,

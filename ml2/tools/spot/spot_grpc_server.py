@@ -191,6 +191,36 @@ class SpotServicer(spot_pb2_grpc.SpotServicer):
             logger.info("Checking equivalence took %f seconds", end - start)
             return ltl_equiv_pb2.LTLEquivSolution(status=result["status"], time=result["time"])
 
+    def CheckEquivRenaming(self, request, context):
+        from .spot_wrapper import check_equiv_renaming
+
+        start = time.time()
+        if request.HasField("timeout"):
+            result = self.manager.dict()
+            process = Process(
+                target=check_equiv_renaming, args=(request.formula1, request.formula2, result)
+            )
+            process.start()
+            process.join(timeout=request.timeout)
+            process.terminate()
+            end = time.time()
+            logger.info("Multiprocessing and checking equivalence took %f seconds", end - start)
+            if process.exitcode == 0:
+                return ltl_equiv_pb2.LTLEquivSolution(
+                    status=result["status"],
+                    time=result["time"],
+                )
+            elif process.exitcode is None:
+                return ltl_equiv_pb2.LTLEquivSolution(status="timeout")
+            else:
+                return ltl_equiv_pb2.LTLEquivSolution(status="error")
+        else:
+            result = {}
+            check_equiv_renaming(request.formula1, request.formula2, result)
+            end = time.time()
+            logger.info("Checking equivalence took %f seconds", end - start)
+            return ltl_equiv_pb2.LTLEquivSolution(status=result["status"], time=result["time"])
+
     def CheckSat(self, request, context):
         from .spot_wrapper import check_sat
 

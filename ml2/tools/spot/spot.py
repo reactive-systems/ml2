@@ -102,6 +102,18 @@ class Spot(GRPCService):
         pb_solution = self.stub.CheckEquiv(pb_problem)
         return LTLEquivStatus(pb_solution.status)
 
+    def check_equiv_renaming(
+        self, f: LTLFormula, g: LTLFormula, timeout: float = None
+    ) -> LTLEquivStatus:
+        """Checks if a renaming of atomic propositions f_ap -> g_ap exist such that the formulas are equivalent. If one formula has more aps than the other, only the smaller number of aps are used for renaming."""
+        pb_problem = ltl_equiv_pb2.LTLEquivProblem(
+            formula1=f.to_str(notation="infix"),
+            formula2=g.to_str(notation="infix"),
+            timeout=timeout,
+        )
+        pb_solution = self.stub.CheckEquivRenaming(pb_problem)
+        return LTLEquivStatus(pb_solution.status)
+
     def check_sat(self, formula: LTLFormula, simplify: bool = False, timeout: int = None):
         pb_problem = ltl_sat_pb2.LTLSatProblem(
             formula=formula.to_str(notation="infix"), simplify=simplify, timeout=timeout

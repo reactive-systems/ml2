@@ -11,6 +11,7 @@ from ...globals import CONTAINER_REGISTRY
 from ...grpc.neurosynt import neurosynt_pb2_grpc
 from ...grpc.tools.tools_pb2 import SetupRequest
 from ...ltl.ltl_syn.ltl_syn_status import LTLSynStatus
+from ...utils import is_pt_available, is_tf_available
 from ...verifier import Verifier
 from ..grpc_service import GRPCService
 from ..ltl_tool.tool_ltl_syn_problem import (
@@ -18,7 +19,14 @@ from ..ltl_tool.tool_ltl_syn_problem import (
     ToolLTLSynSolution,
     ToolNeuralLTLSynSolution,
 )
-from .neurosynt_grpc_server import serve
+
+if is_pt_available() and is_tf_available():
+    from .neurosynt_grpc_server import serve
+else:
+
+    def serve(port: int) -> None:
+        raise ImportError("Module 'tensorflow' not installed")
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

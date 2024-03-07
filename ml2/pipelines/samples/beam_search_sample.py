@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from typing import Generic, List, TypeVar
 
 from ...dtypes import DType
-from ...tokenizers import TFEncoding
 from .eval_sample import EvalLabeledSample, EvalSample
 
 I = TypeVar("I", bound=DType)
@@ -15,7 +14,7 @@ T = TypeVar("T", bound=DType)
 class Beam(Generic[T]):
     id: int
     pred: T = None
-    pred_enc: TFEncoding = None
+    pred_enc: ... = None
     pred_dec_err: str = None
     time: float = None
 
