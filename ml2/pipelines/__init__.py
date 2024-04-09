@@ -1,4 +1,4 @@
-from ..utils import is_pt_available, is_tf_available
+from ..utils import is_hf_available, is_pt_available, is_tf_available
 from . import loggers, samples
 
 if is_pt_available() and is_tf_available():
@@ -12,3 +12,6 @@ if is_pt_available() and is_tf_available():
     from .tf_sl_pipeline import TFSLPipeline
     from .tf_transformer_pipeline import TFTransformerPipeline
     from .verification_pipeline import VerificationPipeline
+
+if is_hf_available():
+    from .hf_pipelines import HFPTExpr2ExprPipeline, HFPTExpr2TextPipeline, HFPTText2TextPipeline

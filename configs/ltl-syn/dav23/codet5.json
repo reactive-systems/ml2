@@ -1,0 +1,43 @@
+{
+  "name": "codet5",
+  "auto_version": true,
+  "project": "ltl-syn",
+  "upload": false,
+  "pipeline": {
+    "type": "HFPTExpr2TextPipeline",
+    "hf_checkpoint_name": "Salesforce/codet5-small",
+    "input_dtype": "LTLSpec",
+    "target_dtype": "LTLSynSolution",
+    "hf_input_tokenizer": "Salesforce/codet5-small",
+    "hf_target_tokenizer": "Salesforce/codet5-small",
+    "max_input_length": 256,
+    "max_target_length": 192,
+    "input_notation": "prefix"
+  },
+  "trainer": {
+    "type": "HFSeq2SeqTrainer",
+    "train_dataset": "ltl-syn/scpa-2/train",
+    "val_dataset": {
+      "base": "ltl-syn/scpa-2/val",
+      "sample": 512
+    },
+    "batch_size": 128,
+    "learning_rate": 0.0005,
+    "steps": 20000,
+    "stream_to_wandb": false,
+    "val_freq": 500
+  },
+  "evaluation": [
+    {
+      "type": "SupervisedEvalTask",
+      "batch_size": 64,
+      "dataset": {
+        "base": "ltl-syn/scpa-2/test",
+        "sample": 1024
+      },
+      "pipeline": {
+        "beam_size": 2
+      }
+    }
+  ]
+}

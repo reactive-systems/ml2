@@ -11,7 +11,7 @@ from .ltl_syn_problem import LTLSynSolution
 
 @register_type
 class DecompLTLSynProblem(CSVWithId, Supervised[DecompLTLSpec, LTLSynSolution]):
-    def __init__(self, ltl_spec: DecompLTLSpec, ltl_syn_solution=LTLSynSolution) -> None:
+    def __init__(self, ltl_spec: DecompLTLSpec, ltl_syn_solution: LTLSynSolution) -> None:
         self.ltl_spec = ltl_spec
         self.ltl_syn_solution = ltl_syn_solution
 

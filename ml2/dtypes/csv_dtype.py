@@ -83,6 +83,8 @@ class CSV(CSVLoggable):
         """Reads a fields dict, from which the CSV data type can be constructed.
         This is a stub of _from_csv_fields(), which additionally reads the identifier of the class.
 
+        If a prefix or suffix is given, only those who have the prefix and suffix are used and the prefix/suffix is removed for class creation.
+
         Args:
             fields (Dict[str, str]): A dictionary from which the class is constructed.
 
@@ -93,7 +95,11 @@ class CSV(CSVLoggable):
         prefix = prefix if prefix is not None else ""
         suffix = suffix if suffix is not None else ""
 
-        fields = {cls._remove_prefix_suffix(d, prefix, suffix): fields[d] for d in fields}
+        fields = {
+            cls._remove_prefix_suffix(d, prefix, suffix): fields[d]
+            for d in fields
+            if d.startswith(prefix) and d.endswith(suffix)
+        }
         return cls._from_csv_fields(fields=fields, **kwargs)
 
     @staticmethod

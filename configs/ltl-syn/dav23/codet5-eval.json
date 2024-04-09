@@ -1,0 +1,20 @@
+{
+  "name": "codet5-25-eval",
+  "auto_version": true,
+  "project": "ltl-syn",
+  "upload": false,
+  "evaluation": [
+    {
+      "type": "SupervisedEvalTask",
+      "batch_size": 256,
+      "dataset": {
+        "base": "ltl-syn/scpa-2/test",
+        "sample": 1024
+      },
+      "pipeline": {
+        "base": "ltl-syn/codet5-25/train/pipe",
+        "beam_size": 1
+      }
+    }
+  ]
+}

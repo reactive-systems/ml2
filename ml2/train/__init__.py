@@ -1,4 +1,4 @@
-from ..utils import is_ray_available, is_tf_available
+from ..utils import is_hf_available, is_ray_available, is_tf_available
 from .load_trainer import load_trainer
 from .trainer import Trainer
 
@@ -9,3 +9,6 @@ if is_tf_available():
 
     if is_ray_available():
         from .callbacks import TuneReporterCallback
+
+if is_hf_available():
+    from .hf_seq2seq_trainer import HFSeq2SeqTrainer
