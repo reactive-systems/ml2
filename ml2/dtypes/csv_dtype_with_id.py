@@ -71,6 +71,8 @@ class CSVWithId(CSV, Hashable):
         """Reads a fields dict, from which the CSV data type can be constructed.
         This is a wrapper to  _from_csv_fields(), which additionally reads the identifier of the class.
 
+        If a prefix or suffix is given, only those who have the prefix and suffix are used and the prefix/suffix is removed for class creation.
+
         Args:
             fields (Dict[str, str]): A dictionary from which the class is constructed.
 

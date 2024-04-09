@@ -1,0 +1,27 @@
+{
+  "name": "codet5-25-vp-eval",
+  "auto_version": true,
+  "project": "ltl-syn",
+  "upload": false,
+  "evaluation": [
+    {
+      "type": "EvalTask",
+      "batch_size": 256,
+      "dataset": {
+        "base": "ltl-spec/sc-0",
+        "sample": 1024
+      },
+      "pipeline": {
+        "type": "BeamSearchVerificationPipeline",
+        "verifier": {
+          "type": "NuxmvMC",
+          "start_containerized_service": true
+        },
+        "pipeline": {
+          "base": "ltl-syn/codet5-25/train/pipe",
+          "beam_size": 1
+        }
+      }
+    }
+  ]
+}
