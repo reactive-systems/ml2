@@ -1,12 +1,13 @@
 """HuggingFace Seq2Seq Trainer"""
 
-
+import logging
 import os
 
 import numpy as np
-import wandb
 from transformers import Seq2SeqTrainer, Seq2SeqTrainingArguments
 from transformers.trainer_utils import get_last_checkpoint
+
+import wandb
 
 from ..datasets import Dataset
 from ..pipelines import HFPTText2TextPipeline
@@ -91,13 +92,30 @@ class HFSeq2SeqTrainer(Trainer):
             acc_per_seq = np.mean(np.fix(np.mean(acc_el, axis=-1, where=labels != 0)))
             return {"acc": acc, "acc_per_seq": acc_per_seq}
 
+        hf_train_dataset, train_err_callbacks = self.pipeline.get_hf_dataset_supervised(
+            self.train_dataset, return_error_callbacks=True
+        )
+        hf_val_dataset, val_err_callbacks = self.pipeline.get_hf_dataset_supervised(
+            self.val_dataset, return_error_callbacks=True
+        )
+
         trainer = Seq2SeqTrainer(
             args=train_args,
-            train_dataset=self.pipeline.get_hf_dataset_supervised(self.train_dataset),
-            eval_dataset=self.pipeline.get_hf_dataset_supervised(self.val_dataset),
+            train_dataset=hf_train_dataset,
+            eval_dataset=hf_val_dataset,
             model=self.pipeline.train_model,
             compute_metrics=metrics,
         )
+
+        # filter warning about adding the same callback class multiple times
+        def callback_warning_filter(record):
+            return not record.msg.startswith("You are adding a ")
+
+        transformers_logger = logging.getLogger("transformers.trainer_callback")
+        transformers_logger.addFilter(callback_warning_filter)
+        for callback in train_err_callbacks + val_err_callbacks:
+            trainer.add_callback(callback)
+        transformers_logger.removeFilter(callback_warning_filter)
 
         trainer.train()
 

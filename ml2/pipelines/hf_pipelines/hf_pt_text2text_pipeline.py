@@ -1,12 +1,14 @@
 """HuggingFace PyTorch text to text pipeline"""
 
+import json
 import logging
+import os
 import time
-from typing import Generator, Generic, List, Type, TypeVar
+from typing import Dict, Generator, Generic, List, Type, TypeVar
 
 from datasets import IterableDataset
 from tqdm import tqdm
-from transformers import AutoConfig, AutoModelForSeq2SeqLM, AutoTokenizer
+from transformers import AutoConfig, AutoModelForSeq2SeqLM, AutoTokenizer, TrainerCallback
 
 from ...configurable import Configurable
 from ...datasets import Dataset
@@ -32,6 +34,27 @@ logger = logging.getLogger(__name__)
 
 I = TypeVar("I", bound=String)
 T = TypeVar("T", bound=String)
+
+
+class TokenizationErrorCallback(TrainerCallback):
+
+    def __init__(
+        self, name: str, errors: Dict[str, int], log_dir: str, filename: str = None
+    ) -> None:
+        super().__init__()
+        self.name = name
+        self.errors = errors
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        self.log_dir = log_dir
+        self.filename = filename if filename is not None else self.name + "-err"
+
+    def on_epoch_end(self, args, state, control, **kwargs):
+        if state.epoch <= 1.0 and any(self.errors):
+            logger.info(f"When tokenizing {self.name} errors occured: %s", self.errors)
+            errs_filepath = os.path.join(self.log_dir, self.filename)
+            with open(errs_filepath, "w") as errs_file:
+                json.dump(self.errors, errs_file)
 
 
 class HFModelConfig:
@@ -278,6 +301,9 @@ class HFPTText2TextPipeline(ModelPipeline, Generic[I, T]):
     def get_hf_dataset_supervised(
         self, dataset: Dataset[Supervised[I, T]], return_error_callbacks: bool = False
     ):
+        input_token_errs: Dict[str, int] = {}
+        target_token_errs: Dict[str, int] = {}
+
         def generator():
             for sample in dataset.generator():
                 inputs = self.input_tokenizer(
@@ -289,6 +315,9 @@ class HFPTText2TextPipeline(ModelPipeline, Generic[I, T]):
                     truncation=False,
                 )
                 if inputs.pop("length") > self.max_input_length:
+                    input_token_errs["max_input_length"] = (
+                        input_token_errs.get("max_input_length", 0) + 1
+                    )
                     continue
                 with self.target_tokenizer.as_target_tokenizer():
                     labels = self.target_tokenizer(
@@ -300,6 +329,9 @@ class HFPTText2TextPipeline(ModelPipeline, Generic[I, T]):
                         truncation=False,
                     )
                 if labels.pop("length") > self.max_target_length:
+                    target_token_errs["max_target_length"] = (
+                        target_token_errs.get("max_target_length", 0) + 1
+                    )
                     continue
                 inputs["labels"] = labels["input_ids"]
                 # TODO drop prepended batch axis
@@ -307,7 +339,27 @@ class HFPTText2TextPipeline(ModelPipeline, Generic[I, T]):
                     inputs[k] = v[0]
                 yield inputs
 
-        return IterableDataset.from_generator(generator)
+        if return_error_callbacks:
+            log_dir = os.path.join(self.local_path, "tokenizer-errors")
+            log_dir = os.path.join(log_dir, dataset.name.replace("/", "-"))
+            input_errs_callback = TokenizationErrorCallback(
+                name=f"{dataset.name} inputs",
+                errors=input_token_errs,
+                log_dir=log_dir,
+                filename="input-errors",
+            )
+            target_errs_callback = TokenizationErrorCallback(
+                name=f"{dataset.name} targets",
+                errors=target_token_errs,
+                log_dir=log_dir,
+                filename="target-errors",
+            )
+            return IterableDataset.from_generator(generator), [
+                input_errs_callback,
+                target_errs_callback,
+            ]
+        else:
+            return IterableDataset.from_generator(generator)
 
     @staticmethod
     def default_metric() -> Metric:
