@@ -11,6 +11,8 @@ def load_tf_optimizer_from_config(config: dict) -> tf.keras.optimizers.Optimizer
     if "type" not in config:
         raise Exception("Optimizer type not specified in config")
     keras_config = copy.deepcopy(config)
+    # default to non-legacy optimizer
+    keras_config["is_legacy_optimizer"] = keras_config.get("is_legacy_optimizer", False)
     optimizer_type = keras_config.pop("type")
     if "name" not in keras_config:
         keras_config["name"] = optimizer_type
@@ -47,7 +49,7 @@ def tf_optimizer_to_config(optimizer: tf.keras.optimizers.Optimizer) -> dict:
             learning_rate_config["type"] = learning_rate_serialization["class_name"]
         config["learning_rate"] = learning_rate_config
     for k, v in config.items():
-        if type(v) not in [bool, dict, float, int, str]:
+        if v is not None and type(v) not in [bool, dict, float, int, str]:
             # v is numpy type that needs to be converted to native Python type
             config[k] = v.item()
     return config
