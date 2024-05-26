@@ -2,6 +2,7 @@
 
 import copy
 import logging
+import os
 import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
@@ -174,10 +175,16 @@ class TFTransformerPipeline(Seq2SeqPipeline[I, T], TFSLPipeline[I, T]):
         if not self._attn_model:
             self._attn_model = self.init_model(training=False, attn_weights=True)
             logger.info("Created attention model")
-            checkpoint = tf.train.latest_checkpoint(self.checkpoint_path)
-            if checkpoint:
-                logger.info("Found checkpoint %s", checkpoint)
-                self._attn_model.load_weights(checkpoint).expect_partial()
+            # for compatibility with older versions check if path is a directory and retrieve checkpoint via latest_checkpoint function
+            if os.path.isdir(self.checkpoint_path):
+                checkpoint = tf.train.latest_checkpoint(self.checkpoint_path)
+                if checkpoint:
+                    logger.info("Found legacy format checkpoint %s", checkpoint)
+                    self._attn_model.load_weights(checkpoint).expect_partial()
+                    logger.info("Loaded weights from legacy format checkpoint")
+            elif os.path.isfile(self.checkpoint_path):
+                logger.info("Found checkpoint %s", self.checkpoint_path)
+                self._attn_model.load_weights(self.checkpoint_path)
                 logger.info("Loaded weights from checkpoint")
         return self._attn_model
 
