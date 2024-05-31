@@ -13,6 +13,17 @@ from ..utils.list_utils import join_lists
 from .ltl_lexer import lex_ltl
 from .ltl_parser import parse_infix_ltl, parse_prefix_ltl
 
+DEFAULT_PRECEDENCE = [
+    # low
+    {"assoc": "right", "operator": ["<->", "->"]},
+    {"assoc": "left", "operator": ["^"]},
+    {"assoc": "left", "operator": ["|"]},
+    {"assoc": "left", "operator": ["&"]},
+    {"assoc": "right", "operator": ["U", "W", "R"]},
+    {"assoc": "right", "operator": ["X", "!", "F", "G"]},
+    # high
+]
+
 
 @register_type
 class LTLFormula(BinaryExpr, CSVWithId):
@@ -64,6 +75,29 @@ class LTLFormula(BinaryExpr, CSVWithId):
         return cls.from_str(
             formula=pb2_LTLFormula.formula, notation=pb2_LTLFormula.notation, **kwargs
         )
+
+    def to_tokens(
+        self, notation: str = None, precedence: Optional[List[Dict[str, Any]]] = None, **kwargs
+    ) -> List[str]:
+        if precedence is not None and notation == "infix-min-pars":
+            precedence = DEFAULT_PRECEDENCE
+            notation = "infix"
+        return super().to_tokens(notation, precedence, **kwargs)
+
+    def to_str(
+        self,
+        notation: Optional[str] = None,
+        precedence: Optional[List[Dict[str, Any]]] = None,
+        **kwargs,
+    ) -> str:
+        if notation == "infix-default-precedence":
+            if precedence is not None:
+                raise Exception(
+                    'precedence cannot be set if notation is "infix-default-precedence"'
+                )
+            precedence = DEFAULT_PRECEDENCE
+            notation = "infix"
+        return super().to_str(notation, precedence, **kwargs)
 
     @staticmethod
     def lex(expr: str) -> List[str]:
@@ -121,9 +155,11 @@ class DecompLTLFormula(DecompBinaryExpr, LTLFormula):
     @classmethod
     def from_dict(cls, d: Dict[str, Any], notation: str = None, **kwargs) -> "DecompLTLFormula":
         return cls(
-            sub_exprs=[LTLFormula(formula=f, notation=notation) for f in d["formulas"]]
-            if "formulas" in d and d["formulas"] is not None
-            else None
+            sub_exprs=(
+                [LTLFormula(formula=f, notation=notation) for f in d["formulas"]]
+                if "formulas" in d and d["formulas"] is not None
+                else None
+            )
         )
 
     @classmethod
