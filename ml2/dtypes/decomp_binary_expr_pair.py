@@ -29,8 +29,8 @@ class DecompBinaryExprPair(
         if notation is None:
             notation = "infix"
         return self.comp_token_list_pair(
-            self[0].to_tokens(notation=notation),
-            self[1].to_tokens(notation=notation),
+            self[0].to_tokens(notation=notation, **kwargs),
+            self[1].to_tokens(notation=notation, **kwargs),
             notation=notation,
         )
 
