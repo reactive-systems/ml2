@@ -157,7 +157,8 @@ class KerasTrainer(Trainer):
             self.callbacks += [WandbMetricsLogger(log_freq=self.log_freq)]
 
         train_model = self.pipeline.train_model
-        train_model.compile(optimizer=self.optimizer)
+        metrics = self.pipeline.default_train_metrics()
+        train_model.compile(optimizer=self.optimizer, metrics=metrics)
         logger.info("Compiled training model")
 
         tf_train_data = self.get_tf_dataset(self.train_dataset).repeat()
