@@ -1,9 +1,9 @@
 """TensorFlow pipeline"""
 
 import logging
-from abc import abstractmethod
 import os
-from typing import Generic, TypeVar
+from abc import abstractmethod
+from typing import Generic, List, TypeVar
 
 import tensorflow as tf
 
@@ -27,6 +27,9 @@ class TFPipeline(ModelPipeline[T], Generic[T]):
         self._eval_model = None
 
         super().__init__(**kwargs)
+
+    def default_train_metrics(self) -> List[tf.keras.metrics.Metric]:
+        raise NotImplementedError()
 
     @property
     def eval_model(self):

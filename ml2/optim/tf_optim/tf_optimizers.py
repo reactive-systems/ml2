@@ -1,6 +1,7 @@
 """Load TensorFlow optimizer"""
 
 import copy
+from packaging.version import Version
 
 import tensorflow as tf
 
@@ -11,8 +12,10 @@ def load_tf_optimizer_from_config(config: dict) -> tf.keras.optimizers.Optimizer
     if "type" not in config:
         raise Exception("Optimizer type not specified in config")
     keras_config = copy.deepcopy(config)
-    # default to non-legacy optimizer
-    keras_config["is_legacy_optimizer"] = keras_config.get("is_legacy_optimizer", False)
+    if Version(tf.__version__) < Version("2.16.0"):
+        # default to non-legacy optimizer prior to TensorFlow 2.16 (Keras 3)
+        # do not set for TensorFlow 2.16 (Keras 3) and above where legacy optimizers got removed
+        keras_config["is_legacy_optimizer"] = keras_config.get("is_legacy_optimizer", False)
     optimizer_type = keras_config.pop("type")
     if "name" not in keras_config:
         keras_config["name"] = optimizer_type

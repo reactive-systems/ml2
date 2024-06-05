@@ -10,7 +10,6 @@ from .beam_search import BeamSearch, flatten_beam_dim
 from .tf_transformer import (
     TransformerDecoder,
     TransformerEncoder,
-    TransformerMetricsLayer,
     create_look_ahead_mask,
     create_padding_mask,
 )
@@ -42,29 +41,7 @@ def create_model(params, training, custom_pos_enc=False, attn_weights=False):
     if training:
         # do not provide training argument so keras fit method can set it
         predictions, _ = hierarchical_transformer(transformer_inputs)
-        predictions = TransformerMetricsLayer(params)([predictions, target])
-
         model = tf.keras.Model(model_inputs, predictions)
-
-        mask = tf.cast(
-            tf.math.logical_not(tf.math.equal(target, params["target_pad_id"])),
-            params["dtype_float"],
-        )
-
-        loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
-            reduction=tf.losses.Reduction.NONE
-        )
-
-        loss = tf.keras.layers.Lambda(lambda x: (loss_object(x[0], x[1], x[2])))(
-            (target, predictions, mask)
-        )
-
-        if "num_replica" in params.keys() and params["num_replica"] is not None:
-            scale_loss = tf.reduce_sum(loss) / (tf.reduce_sum(mask) * params["num_replica"])
-        else:
-            scale_loss = tf.reduce_sum(loss) / (tf.reduce_sum(mask))
-
-        model.add_loss(scale_loss)
         return model
     else:
         # do not provide training argument so keras fit method can set it
@@ -189,7 +166,7 @@ class HierarchicalTransformer(tf.keras.Model):
     def get_config(self):
         return {"params": self.params}
 
-    def call(self, inputs, training):
+    def call(self, inputs, training=None):
         """
         Args:
             inputs: dictionary that contains the following (optional) keys:
@@ -203,7 +180,8 @@ class HierarchicalTransformer(tf.keras.Model):
         input_padding_mask = tf.cast(
             tf.math.equal(input, self.params["input_pad_id"]), self.params["dtype_float"]
         )
-        input_padding_mask = input_padding_mask[:, tf.newaxis, tf.newaxis, :, :]
+        # add layer, head and sequence dimension
+        input_padding_mask = input_padding_mask[:, tf.newaxis, tf.newaxis, tf.newaxis, :, :]
 
         if "positional_encoding" in inputs:
             positional_encoding = inputs["positional_encoding"]
@@ -222,15 +200,19 @@ class HierarchicalTransformer(tf.keras.Model):
         input_length_d0 = self.params["input_length"][0]
         input_length_d1 = self.params["input_length"][1]
         if self.params["fix_d1_embed"]:
-            input_padding_mask = input_padding_mask[:, :, :, :, 0]
+            input_padding_mask = input_padding_mask[:, :, :, :, :, 0]
             input_length_d1 = 1
         input_padding_mask = tf.reshape(
-            input_padding_mask, [batch_size, 1, 1, input_length_d0 * input_length_d1]
+            input_padding_mask, [batch_size, 1, 1, 1, input_length_d0 * input_length_d1]
         )
+        # remove layer dimension for encoder-decoder attention
+        input_padding_mask = input_padding_mask[:, 0, :, :, :]
 
         if "target" in inputs:
             target = inputs["target"]
-            return self.decode(target, encoder_output, input_padding_mask, training)
+            pred, attn_weights = self.decode(target, encoder_output, input_padding_mask, training)
+            self.add_crossentropy_loss(pred, target)
+            return pred, attn_weights
         else:
             return self.predict(
                 encoder_output,
@@ -264,16 +246,16 @@ class HierarchicalTransformer(tf.keras.Model):
             input_embedding, [batch_size * input_length_d0, input_length_d1, d_embed_enc]
         )
         padding_mask_d1 = tf.reshape(
-            padding_mask, [batch_size * input_length_d0, 1, 1, input_length_d1]
+            padding_mask, [batch_size * input_length_d0, 1, 1, 1, input_length_d1]
         )
 
         encoder_output_d1, attn_weights_d1 = self.encoder_stack_d1(
-            input_embedding_d1, padding_mask_d1, training
+            input_embedding_d1, padding_mask_d1, training=training
         )
 
         if self.params["fix_d1_embed"]:
             encoder_output_d1 = encoder_output_d1[:, 0, :]
-            padding_mask = padding_mask[:, :, :, :, 0]
+            padding_mask = padding_mask[:, :, :, :, :, 0]
             input_length_d1 = 1
 
         # reshape to (batch_size, input_length[0] * input_length[1], d_embed_enc)
@@ -281,11 +263,11 @@ class HierarchicalTransformer(tf.keras.Model):
             encoder_output_d1, [batch_size, input_length_d0 * input_length_d1, d_embed_enc]
         )
         padding_mask_d0 = tf.reshape(
-            padding_mask, [batch_size, 1, 1, input_length_d0 * input_length_d1]
+            padding_mask, [batch_size, 1, 1, 1, input_length_d0 * input_length_d1]
         )
 
         encoder_output_d0, attn_weights_d0 = self.encoder_stack_d0(
-            input_embedding_d0, padding_mask_d0, training
+            input_embedding_d0, padding_mask_d0, training=training
         )
 
         return encoder_output_d0, attn_weights_d1, attn_weights_d0
@@ -319,7 +301,11 @@ class HierarchicalTransformer(tf.keras.Model):
         target_embedding += self.decoder_positional_encoding[:, :target_length, :]
         decoder_embedding = self.decoder_dropout(target_embedding, training=training)
         decoder_output, attn_weights = self.decoder_stack(
-            decoder_embedding, encoder_output, look_ahead_mask, input_padding_mask, training
+            decoder_embedding,
+            encoder_output,
+            look_ahead_mask,
+            input_padding_mask,
+            training=training,
         )
         output = self.final_projection(decoder_output)
         probs = self.softmax(output)
@@ -418,3 +404,20 @@ class HierarchicalTransformer(tf.keras.Model):
 
         else:
             return {"outputs": decoded_ids, "scores": scores}
+
+    def add_crossentropy_loss(self, pred, target):
+        mask = tf.cast(
+            tf.math.logical_not(tf.math.equal(target, self.params["target_pad_id"])),
+            self.params["dtype_float"],
+        )
+
+        loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(reduction=tf.losses.Reduction.NONE)
+
+        loss = loss_fn(target, pred, mask)
+
+        if "num_replica" in self.params.keys() and self.params["num_replica"] is not None:
+            scale_loss = tf.reduce_sum(loss) / (tf.reduce_sum(mask) * self.params["num_replica"])
+        else:
+            scale_loss = tf.reduce_sum(loss) / (tf.reduce_sum(mask))
+
+        self.add_loss(scale_loss)

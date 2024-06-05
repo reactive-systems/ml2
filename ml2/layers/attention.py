@@ -1,6 +1,5 @@
 """Implementation of scaled dot-product attention and multi-head attention as described in 'Attention Is All You Need' (Vaswani et al., 2017) based on https://www.tensorflow.org/tutorials/text/transformer"""
 
-
 import tensorflow as tf
 
 from ..utils.dist_utils import architecture_is_apple_arm
@@ -113,10 +112,9 @@ class MultiHeadAttention(tf.keras.layers.Layer):
             cache["values"] = tf.transpose(values, perm=[0, 2, 1, 3])
 
         if mask is not None:
-            num_mask_heads = tf.shape(mask)[1]
-            if num_mask_heads > 1 and num_mask_heads != self.num_heads:
-                if self.num_heads % num_mask_heads == 0:
-                    mask = tf.repeat(mask, (self.num_heads // num_mask_heads), axis=1)
+            num_head_masks = tf.shape(mask)[1]
+            # implicitly repeat head masks if num_head_masks < num_heads
+            mask = tf.repeat(mask, (self.num_heads // num_head_masks), axis=1)
 
         scaled_attention, attention_weights = scaled_dot_product_attention(
             queries, keys, values, mask

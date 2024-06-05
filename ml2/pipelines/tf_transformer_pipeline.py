@@ -16,6 +16,7 @@ from ..configurable import Configurable
 from ..datasets import Dataset
 from ..dtypes import DType, Supervised
 from ..models import tf_transformer
+from ..models.tf_transformer_metrics import TransformerAccuracy
 from ..registry import register_type
 from ..utils.tf_utils import (
     str_to_tf_float_dtype,
@@ -187,6 +188,13 @@ class TFTransformerPipeline(Seq2SeqPipeline[I, T], TFSLPipeline[I, T]):
                 self._attn_model.load_weights(self.checkpoint_path)
                 logger.info("Loaded weights from checkpoint")
         return self._attn_model
+
+    def default_train_metrics(self):
+        return [
+            TransformerAccuracy(
+                pad_id=self.target_pad_id, dtype_float=self.model_config.dtype_float
+            )
+        ]
 
     def init_model(
         self,
