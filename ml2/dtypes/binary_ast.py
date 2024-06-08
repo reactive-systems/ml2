@@ -2,7 +2,7 @@
 
 import logging
 from enum import Enum
-from typing import Callable, Iterable, List, Tuple, TypeVar
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TypeVar
 
 from .seq import Seq
 from .tree import TraversalOrder, Tree
@@ -34,6 +34,18 @@ class BinaryAST(Tree[str], Seq):
     @property
     def has_rhs(self) -> bool:
         return len(self) > 1
+
+    @property
+    def is_binary(self) -> bool:
+        return self.has_rhs
+
+    @property
+    def is_unary(self) -> bool:
+        return not self.has_rhs and self.has_lhs
+
+    @property
+    def is_leaf(self) -> bool:
+        return not self.has_lhs
 
     @property
     def lhs(self) -> "BinaryAST":
@@ -78,10 +90,42 @@ class BinaryAST(Tree[str], Seq):
             new_ast = BinaryAST(label=operator, lhs=new_asts.pop(), rhs=new_ast)
         return new_ast
 
-    def to_tokens(self, notation: str = "infix", **kwargs) -> List[str]:
-        def add_pars(tokens: List[str]) -> List[str]:
-            if len(tokens) > 0:
-                return ["("] + tokens + [")"]
+    def to_tokens(
+        self, notation: str = "infix", precedence: Optional[List[Dict[str, Any]]] = None, **kwargs
+    ) -> List[str]:
+        # example for precedence in LTL:
+        # all missing operators or missing associativity will lead to unambiguous parenthesizing:
+        # precedence = [
+        #     # low
+        #     {"operator": ["<->", "->"]},
+        #     {"assoc": "left", "operator": ["^"]},
+        #     {"assoc": "left", "operator": ["|"]},
+        #     {"assoc": "left", "operator": ["&"]},
+        #     {"operator": ["U", "W", "R"]},
+        #     {"assoc": "right", "operator": ["X", "!", "F", "G"]},
+        #     # high
+        # ]
+        if precedence is None:
+            precedence = []
+
+        assoc_map = {op: p["assoc"] for p in precedence if "assoc" in p for op in p["operator"]}
+        acc = 0, None
+        p = (acc := (acc[0] + 1, p["operator"]) for p in precedence)
+        precedence_map = {op: e[0] for e in p for op in e[1]}
+
+        def add_pars(tokens: List[str], tree: "BinaryAST", child: str) -> List[str]:
+            if tokens:
+                child_node = tree.lhs if child == "left" or tree.is_unary else tree.rhs
+                if (
+                    not child_node.is_leaf or precedence == []
+                ):  # not if its a leaf except for fully parenthesized
+                    if tree.label not in precedence_map or child_node.label not in precedence_map:
+                        tokens = ["("] + tokens + [")"]
+                    elif precedence_map[child_node.label] < precedence_map[tree.label]:
+                        tokens = ["("] + tokens + [")"]
+                    elif precedence_map[child_node.label] == precedence_map[tree.label]:
+                        if tree.label not in assoc_map or assoc_map[tree.label] != child:
+                            tokens = ["("] + tokens + [")"]
             return tokens
 
         def binary_part(childs: List[Tree[T]]) -> Tuple[List[Tree[T]], List[Tree[T]]]:
@@ -103,8 +147,8 @@ class BinaryAST(Tree[str], Seq):
         else:
             raise ValueError(f"Unsupported expression notation {notation}")
 
-    def to_str(self, notation: str, space: bool = True) -> str:
-        token_list = self.to_tokens(notation)
+    def to_str(self, space: bool = True, **kwargs) -> str:
+        token_list = self.to_tokens(**kwargs)
         if space:
             return " ".join(token_list)
         else:

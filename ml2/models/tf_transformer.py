@@ -74,29 +74,7 @@ def create_model(
     if training:
         # do not provide training argument so keras fit method can set it
         predictions, _ = transformer(transformer_inputs)
-        predictions = TransformerMetricsLayer(params)([predictions, target])
-
         model = tf.keras.Model(model_inputs, predictions)
-
-        mask = tf.cast(
-            tf.math.logical_not(tf.math.equal(target, params["target_pad_id"])),
-            params["dtype_float"],
-        )
-
-        loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
-            reduction=tf.losses.Reduction.NONE
-        )
-
-        loss = tf.keras.layers.Lambda(lambda x: (loss_object(x[0], x[1], x[2])))(
-            (target, predictions, mask)
-        )
-
-        if "num_replica" in params.keys() and params["num_replica"] is not None:
-            scale_loss = tf.reduce_sum(loss) / (tf.reduce_sum(mask) * params["num_replica"])
-        else:
-            scale_loss = tf.reduce_sum(loss) / (tf.reduce_sum(mask))
-
-        model.add_loss(scale_loss)
         return model
     else:
         # do not provide training argument so keras fit method can set it
@@ -114,50 +92,6 @@ def create_model(
         else:
             outputs, scores = results["outputs"], results["scores"]
             return tf.keras.Model(model_inputs, [outputs, scores])
-
-
-class TransformerMetricsLayer(tf.keras.layers.Layer):
-    def __init__(self, params):
-        """
-        Args:
-            params: hyperparameter dictionary containing the following keys:
-                dtype: tf.dtypes.Dtype(), datatype for floating point computations
-                target_pad_id: int, encodes the padding token for targets
-        """
-        super(TransformerMetricsLayer, self).__init__()
-        self.params = params
-
-    def build(self, input_shape):
-        self.accuracy_mean = tf.keras.metrics.Mean("acc")
-        self.accuracy_per_sequence_mean = tf.keras.metrics.Mean("acc_per_seq")
-        super(TransformerMetricsLayer, self).build(input_shape)
-
-    def get_config(self):
-        return {"params": self.params}
-
-    def call(self, inputs):
-        predictions, targets = inputs[0], inputs[1]
-        weights = tf.cast(
-            tf.not_equal(targets, self.params["target_pad_id"]), self.params["dtype_float"]
-        )
-        outputs = tf.cast(tf.argmax(predictions, axis=-1), tf.int32)
-        targets = tf.cast(targets, tf.int32)
-
-        # accuracy
-        # TODO use dtype in params?
-        correct_predictions = tf.cast(tf.equal(outputs, targets), self.dtype)
-        accuracy = self.accuracy_mean(*(correct_predictions, weights))
-        self.add_metric(accuracy)
-
-        # accuracy per sequence
-        incorrect_predictions = tf.cast(tf.not_equal(outputs, targets), self.dtype) * weights
-        correct_sequences = 1.0 - tf.minimum(1.0, tf.reduce_sum(incorrect_predictions, axis=-1))
-        accuracy_per_sequence = self.accuracy_per_sequence_mean(
-            correct_sequences, tf.constant(1.0)
-        )
-        self.add_metric(accuracy_per_sequence)
-
-        return predictions
 
 
 class TransformerEncoderLayer(tf.keras.layers.Layer):
@@ -265,7 +199,7 @@ class TransformerDecoderLayer(tf.keras.layers.Layer):
             cache: dict
         """
         self_attn, self_attn_weights = self.multi_head_self_attn(
-            input, input, input, look_ahead_mask, cache
+            input, input, input, look_ahead_mask, cache=cache
         )
         self_attn = self.dropout_self_attn(self_attn, training=training)
         norm_self_attn = self.norm_self_attn(self_attn + input)
@@ -307,13 +241,10 @@ class TransformerEncoder(tf.keras.layers.Layer):
         attn_weights = {}
         for i in range(self.params["num_layers_enc"]):
             pad_mask_shape = tf.shape(padding_mask)
-            if len(pad_mask_shape) == 5:
-                # select layer specific mask (modulo number of masks for implicit repetition)
-                n_pad_mask = pad_mask_shape[1]
-                layer_padding_mask = padding_mask[:, i % n_pad_mask, :, :, :]
-            else:
-                layer_padding_mask = padding_mask
-            x, self_attn_weights = self.enc_layers[i](x, layer_padding_mask, training)
+            n_layer_mask = pad_mask_shape[1]
+            # select layer specific mask (modulo number of masks for implicit repetition)
+            layer_padding_mask = padding_mask[:, i % n_layer_mask, :, :, :]
+            x, self_attn_weights = self.enc_layers[i](x, layer_padding_mask, training=training)
             attn_weights[f"layer_{i+1}"] = {}
             attn_weights[f"layer_{i+1}"]["self_attn"] = self_attn_weights
         return x, attn_weights
@@ -344,15 +275,13 @@ class TransformerDecoder(tf.keras.layers.Layer):
         attn_weights = {}
         for i in range(self.params["num_layers_dec"]):
             layer_cache = cache[f"layer_{i}"] if cache is not None else None
-            pad_mask_shape = tf.shape(padding_mask)
-            if len(pad_mask_shape) == 5:
-                # select layer specific mask (modulo number of masks for implicit repetition)
-                n_pad_mask = pad_mask_shape[1]
-                layer_padding_mask = padding_mask[:, i % n_pad_mask, :, :, :]
-            else:
-                layer_padding_mask = padding_mask
             x, self_attn_weights, enc_dec_attn_weights = self.dec_layers[i](
-                x, enc_output, look_ahead_mask, layer_padding_mask, training, layer_cache
+                x,
+                enc_output,
+                look_ahead_mask,
+                padding_mask,
+                training=training,
+                cache=layer_cache,
             )
             attn_weights[f"layer_{i+1}"] = {}
             attn_weights[f"layer_{i+1}"]["self_attn"] = self_attn_weights
@@ -418,7 +347,7 @@ class Transformer(tf.keras.Model):
     def get_config(self):
         return {"params": self.params}
 
-    def call(self, inputs, training):
+    def call(self, inputs, training=None):
         """
         Args:
             inputs: dictionary that contains the following (optional) keys:
@@ -463,6 +392,7 @@ class Transformer(tf.keras.Model):
         else:
             seq_len = tf.shape(input)[1]
             positional_encoding = self.encoder_positional_encoding[:, :seq_len, :]
+
         encoder_output, encoder_attn_weights = self.encode(
             input, input_padding_mask, positional_encoding, training
         )
@@ -472,7 +402,10 @@ class Transformer(tf.keras.Model):
         )
         if "target" in inputs:
             target = inputs["target"]
-            return self.decode(target, encoder_output, input_padding_mask, training)
+            pred, attn_weights = self.decode(target, encoder_output, input_padding_mask, training)
+            self.add_crossentropy_loss(pred, target)
+            return pred, attn_weights
+
         else:
             return self.predict(encoder_output, encoder_attn_weights, input_padding_mask, training)
 
@@ -490,7 +423,9 @@ class Transformer(tf.keras.Model):
         )
         input_embedding += positional_encoding
         input_embedding = self.encoder_dropout(input_embedding, training=training)
-        encoder_output, attn_weights = self.encoder_stack(input_embedding, padding_mask, training)
+        encoder_output, attn_weights = self.encoder_stack(
+            input_embedding, padding_mask, training=training
+        )
         return encoder_output, attn_weights
 
     def decode(self, target, encoder_output, input_padding_mask, training):
@@ -522,7 +457,11 @@ class Transformer(tf.keras.Model):
         target_embedding += self.decoder_positional_encoding[:, :target_length, :]
         decoder_embedding = self.decoder_dropout(target_embedding, training=training)
         decoder_output, attn_weights = self.decoder_stack(
-            decoder_embedding, encoder_output, look_ahead_mask, input_padding_mask, training
+            decoder_embedding,
+            encoder_output,
+            look_ahead_mask,
+            input_padding_mask,
+            training=training,
         )
         output = self.final_projection(decoder_output)
         probs = self.softmax(output)
@@ -622,6 +561,23 @@ class Transformer(tf.keras.Model):
 
         else:
             return {"outputs": decoded_ids, "scores": scores}
+
+    def add_crossentropy_loss(self, pred, target):
+        mask = tf.cast(
+            tf.math.logical_not(tf.math.equal(target, self.params["target_pad_id"])),
+            self.params["dtype_float"],
+        )
+
+        loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(reduction=tf.losses.Reduction.NONE)
+
+        loss = loss_fn(target, pred, mask)
+
+        if "num_replica" in self.params.keys() and self.params["num_replica"] is not None:
+            scale_loss = tf.reduce_sum(loss) / (tf.reduce_sum(mask) * self.params["num_replica"])
+        else:
+            scale_loss = tf.reduce_sum(loss) / (tf.reduce_sum(mask))
+
+        self.add_loss(scale_loss)
 
 
 def create_padding_mask(input, pad_id, dtype=tf.float32):

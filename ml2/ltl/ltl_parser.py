@@ -14,9 +14,7 @@ class LTLPrefixParser(sly.Parser):
         ("left", OR),
         ("left", AND),
         ("right", UNTIL, WUNTIL, RELEASE),
-        ("right", EVEN, GLOB),
-        ("right", NEXT),
-        ("right", NOT),
+        ("right", EVEN, GLOB, NEXT, NOT),
     )
 
     @_(
@@ -56,9 +54,7 @@ class LTLInfixParser(sly.Parser):
         ("left", OR),
         ("left", AND),
         ("right", UNTIL, WUNTIL, RELEASE),
-        ("right", EVEN, GLOB),
-        ("right", NEXT),
-        ("right", NOT),
+        ("right", EVEN, GLOB, NEXT, NOT),
     )
 
     @_(

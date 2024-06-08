@@ -28,7 +28,7 @@ class Tree(list, Generic[T]):
             leaves.extend(child.leaves)
         return leaves
 
-    def rename(self, rename: Dict[str, str]):
+    def rename(self, rename: Dict[T, T]):
         if not self:
             if self.label in rename.keys():
                 self.label = rename[self.label]
@@ -70,7 +70,7 @@ class Tree(list, Generic[T]):
         partition_fn: Optional[
             Callable[[List["Tree[T]"]], Tuple[List["Tree[T]"], List["Tree[T]"]]]
         ] = None,
-        post_process_fn: Optional[Callable[[List[T]], List[T]]] = None,
+        post_process_fn: Optional[Callable[[List[T], "Tree[T]", str], List[T]]] = None,
     ) -> List[T]:
         if partition_fn:
             lhs, rhs = partition_fn(self)
@@ -81,8 +81,8 @@ class Tree(list, Generic[T]):
         rhs_seq = [l for t in rhs for l in t.traversal(order, partition_fn, post_process_fn)]
 
         if post_process_fn:
-            lhs_seq = post_process_fn(lhs_seq)
-            rhs_seq = post_process_fn(rhs_seq)
+            lhs_seq = post_process_fn(lhs_seq, self, "left")
+            rhs_seq = post_process_fn(rhs_seq, self, "right")
 
         if order == TraversalOrder.PRE:
             return [self.label] + lhs_seq + rhs_seq

@@ -27,9 +27,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-CHECKPOINT_FILENAME = "ckpt"
-
-
 @register_type
 class KerasTrainerDDP(Trainer):
     def __init__(
@@ -55,6 +52,9 @@ class KerasTrainerDDP(Trainer):
         **kwargs,
     ):
         super().__init__(pipeline=pipeline, **kwargs)
+
+        if self.checkpoint_name is None:
+            self.checkpoint_name = self.full_name + "/ckpts/ckpt.weights.h5"
 
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
@@ -83,7 +83,7 @@ class KerasTrainerDDP(Trainer):
         self.val_freq = val_freq
 
         checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-            filepath=os.path.join(self.checkpoint_path, CHECKPOINT_FILENAME),
+            filepath=self.checkpoint_path,
             monitor=self.checkpoint_monitor,
             save_weights_only=True,
             save_best_only=True,

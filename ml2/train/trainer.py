@@ -30,16 +30,13 @@ class Trainer(Artifact):
         **kwargs,
     ) -> None:
         self.pipeline = pipeline
+        self.checkpoint_name = checkpoint_name
         self.log_freq = log_freq
         self.stream_to_wandb = stream_to_wandb
         self.wandb_name = wandb_name if wandb_name is not None else name
         self.wandb_run_id = wandb_run_id
 
         super().__init__(name=name, **kwargs)
-
-        self.checkpoint_name = (
-            checkpoint_name if checkpoint_name is not None else self.full_name + "/ckpts"
-        )
 
     @property
     def checkpoint_path(self) -> str:

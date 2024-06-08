@@ -1,7 +1,7 @@
 """Abstract binary expression class"""
 
 from abc import abstractmethod
-from typing import Dict, List, Optional, Type, TypeVar
+from typing import Any, Dict, List, Optional, Type, TypeVar
 
 from .binary_ast import BinaryAST
 from .seq import Seq
@@ -36,33 +36,40 @@ class BinaryExpr(Seq):
     def size(self, notation: str = None, **kwargs) -> int:
         return self.ast.size(notation=notation, **kwargs)
 
-    def to_tokens(self, notation: str = None, **kwargs) -> List[str]:
+    def to_tokens(
+        self, notation: str = None, precedence: Optional[List[Dict[str, Any]]] = None, **kwargs
+    ) -> List[str]:
         tokens = []
         if notation is None:
             notation = self._notation if self._notation else "infix"
-        if notation == self._notation and self._tokens:
+        if notation == self._notation and self._tokens and precedence is None:
             return self._tokens
-        elif notation == self._notation:
+        if notation == self._notation and precedence is None:
             tokens = self.lex(self.to_str())
         else:
-            tokens = self.ast.to_tokens(notation=notation)
+            tokens = self.ast.to_tokens(notation=notation, precedence=precedence, **kwargs)
 
         if notation == self._notation:
             self._tokens = tokens
 
         return tokens
 
-    def to_str(self, notation: Optional[str] = None, **kwargs) -> str:
+    def to_str(
+        self,
+        notation: Optional[str] = None,
+        precedence: Optional[List[Dict[str, Any]]] = None,
+        **kwargs
+    ) -> str:
         if not notation:
             notation = (
                 self._notation if self._notation is not None or self._str is not None else "infix"
             )
-        if notation == self._notation and self._str is not None:
+        if notation == self._notation and self._str is not None and precedence is None:
             return self._str
-        elif notation == self._notation and self._tokens is not None:
+        if notation == self._notation and self._tokens is not None and precedence is None:
             return " ".join(self._tokens)
         else:
-            return " ".join(self.ast.to_tokens(notation=notation))
+            return " ".join(self.ast.to_tokens(notation=notation, precedence=precedence, **kwargs))
 
     @classmethod
     def from_ast(cls: Type[T], ast: BinaryAST, **kwargs) -> T:
