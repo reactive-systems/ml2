@@ -173,6 +173,7 @@ def test_spot_mc_2():
     assert solution.detailed_status == "VIOLATED"
     assert solution.tool == spot.tool
     assert solution.time_seconds > 0
+    assert solution.counterexample == SymbolicTrace.from_str("{ g1 & g2 ; !g1 & !g2 }")
     del spot
 
 

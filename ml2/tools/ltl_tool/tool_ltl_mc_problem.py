@@ -13,7 +13,7 @@ from ...ltl.ltl_mc import LTLMCSolution, LTLMCStatus
 from ...ltl.ltl_spec import DecompLTLSpec, LTLSpec
 from ...ltl.ltl_syn import LTLRealStatus
 from ...mealy import MealyMachine
-from ...trace import Trace
+from ...trace import SymbolicTrace
 from .pb2_converter import SpecificationConverterPb2, SystemConverterPb2, TimeConverterPb2
 
 logging.basicConfig(level=logging.INFO)
@@ -138,7 +138,7 @@ class ToolLTLMCSolution(CSVLoggable, TimeConverterPb2):
         detailed_status: str,
         tool: str,
         time: Optional[timedelta] = None,
-        counterexample: Optional[Trace] = None,
+        counterexample: Optional[SymbolicTrace] = None,
     ) -> None:
         self.status = status
         self.detailed_status = detailed_status
@@ -200,7 +200,7 @@ class ToolLTLMCSolution(CSVLoggable, TimeConverterPb2):
         return (
             ["detailed_status"]
             + LTLMCStatus.csv_field_header(**kwargs)
-            + Trace.csv_field_header(**kwargs)
+            + SymbolicTrace.csv_field_header(**kwargs)
             + ["tool"]
             + cls.time_csv_field_header(**kwargs)
         )
@@ -216,7 +216,7 @@ class ToolLTLMCSolution(CSVLoggable, TimeConverterPb2):
         tool: str = pb2_obj.tool
         time: timedelta = cls.from_time_tb2(pb2_obj.time, **kwargs)
         try:
-            trace = Trace.from_str(pb2_obj.counterexample.trace)
+            trace = SymbolicTrace.from_str(pb2_obj.counterexample.trace)
         except Exception:
             trace = None
 

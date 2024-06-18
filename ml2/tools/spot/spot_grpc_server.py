@@ -89,9 +89,11 @@ class SpotServicer(spot_pb2_grpc.SpotServicer):
             args=(
                 problem.specification.to_str(notation="infix"),
                 problem.circuit.to_str() if problem.circuit is not None else None,
-                problem.mealy_machine.to_hoa(realizable=problem.realizable)
-                if problem.mealy_machine is not None
-                else None,
+                (
+                    problem.mealy_machine.to_hoa(realizable=problem.realizable)
+                    if problem.mealy_machine is not None
+                    else None
+                ),
                 problem.realizable,
                 result,
             ),
