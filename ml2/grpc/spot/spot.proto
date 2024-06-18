@@ -25,8 +25,6 @@ message RandLTLArgs {
   string sere_priorities = 11;
 }
 
-
-
 // Spot: a platform for LTL and ω-automata manipulation
 // https://spot.lre.epita.fr/
 service Spot {
@@ -43,30 +41,21 @@ service Spot {
   rpc ModelCheckStream(stream LTLMCProblem) returns (stream LTLMCSolution) {}
   // Call to synthesize a single LTL specification
   rpc Synthesize(LTLSynProblem) returns (LTLSynSolution) {}
+  // Checks whether two formulas are equivalent. If not, returns a word accepted
+  // by exactly one of the two formulas.
+  rpc CheckEquiv(LTLEquivProblem) returns (LTLEquivSolution) {}
 
+  rpc CheckEquivRenaming(LTLEquivProblem) returns (LTLEquivSolution) {}
 
+  rpc CheckSat(LTLSatProblem) returns (LTLSatSolution) {}
 
-  rpc CheckEquiv(LTLEquivProblem)
-      returns (LTLEquivSolution) {}
-
-  rpc CheckEquivRenaming(LTLEquivProblem)
-      returns (LTLEquivSolution) {}
-
-  rpc CheckSat(LTLSatProblem)
-      returns (LTLSatSolution) {}
-
-  rpc MCTrace(LTLTraceMCProblem)
-      returns (LTLTraceMCSolution) {}
+  rpc MCTrace(LTLTraceMCProblem) returns (LTLTraceMCSolution) {}
 
   rpc RandLTL(RandLTLArgs) returns (stream LTLFormula) {}
 
-  rpc aag2mealy(AigerCircuit)
-      returns (MealyMachine) {}
+  rpc aag2mealy(AigerCircuit) returns (MealyMachine) {}
 
-  rpc mealy2aag(MealyMachine)
-      returns (AigerCircuit) {}
-      
-  rpc extractTransitions(MealyMachine)
-      returns (MealyTransitions) {}
+  rpc mealy2aag(MealyMachine) returns (AigerCircuit) {}
 
+  rpc extractTransitions(MealyMachine) returns (MealyTransitions) {}
 }

@@ -136,7 +136,9 @@ class SpotServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def CheckEquiv(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Checks whether two formulas are equivalent. If not, returns a word accepted
+        by exactly one of the two formulas.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')

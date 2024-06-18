@@ -222,6 +222,28 @@ def check_equiv_renaming(formula1: str, formula2: str, result: dict) -> None:
         result["time"] = end - start
 
 
+# def check_equiv(formula1: str, formula2: str, result: dict) -> None:
+#     start = time.time()
+
+#     spot_formula_1 = spot.formula(formula1)
+#     spot_formula_2 = spot.formula(formula2)
+
+#     try:
+#         if spot.are_equivalent(spot_formula_1, spot_formula_2):
+#             end = time.time()
+#             result["status"] = "equivalent"
+#             result["time"] = end - start
+#         else:
+#             end = time.time()
+#             result["status"] = "inequivalent"
+#             result["time"] = end - start
+#     except Exception as e:
+#         print(e)
+#         result["status"] = "error"
+#         end = time.time()
+#         result["time"] = end - start
+
+
 def check_equiv(formula1: str, formula2: str, result: dict) -> None:
     start = time.time()
 
@@ -229,19 +251,51 @@ def check_equiv(formula1: str, formula2: str, result: dict) -> None:
     spot_formula_2 = spot.formula(formula2)
 
     try:
-        if spot.are_equivalent(spot_formula_1, spot_formula_2):
-            end = time.time()
+        aut_1 = spot_formula_1.translate()
+        aut_2 = spot_formula_2.translate()
+        trace = aut_1.exclusive_word(aut_2)
+        end = end = time.time()
+        if trace is None:
             result["status"] = "equivalent"
-            result["time"] = end - start
         else:
-            end = time.time()
             result["status"] = "inequivalent"
-            result["time"] = end - start
+            result["exclusive_word"] = str(trace)
+        result["time"] = end - start
     except Exception as e:
         print(e)
         result["status"] = "error"
         end = time.time()
         result["time"] = end - start
+
+
+# def contains(formulas: List[Tuple[str]], result: dict) -> None:
+#     start = time.time()
+
+#     lcc = spot.language_containment_checker()
+#     result["containments"]
+
+
+#     try:
+
+#         for formula1, formula2 in formulas:
+#             spot_formula_1 = spot.formula(formula1)
+#             spot_formula_2 = spot.formula(formula2)
+#             result[]
+
+
+#         if spot_formula_1.contains(spot_formula_2):
+#             end = time.time()
+#             result["status"] = "contains"
+#             result["time"] = end - start
+#         else:
+#             end = time.time()
+#             result["status"] = "inequivalent"
+#             result["time"] = end - start
+#     except Exception as e:
+#         print(e)
+#         result["status"] = "error"
+#         end = time.time()
+#         result["time"] = end - start
 
 
 def mc_trace(formula: str, trace: str, result):

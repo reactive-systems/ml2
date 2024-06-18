@@ -38,6 +38,7 @@ def test_spot_equiv():
     f = LTLFormula.from_str("a U b")
     g = LTLFormula.from_str("b | (a & X (a U b))")
     assert spot.check_equiv(f, g).equiv
+    del spot
 
 
 @pytest.mark.docker
@@ -46,6 +47,7 @@ def test_spot_equiv_renaming():
     f = LTLFormula.from_str("(F G ! x1) & F x1 & !x2 & x3 & (x4 | !x4) ")
     g = LTLFormula.from_str("!a & F (b & X G ! b) & c")
     assert spot.check_equiv_renaming(f, g).equiv
+    del spot
 
 
 @pytest.mark.docker
@@ -54,6 +56,18 @@ def test_spot_not_equiv():
     f = LTLFormula.from_str("a U b")
     g = LTLFormula.from_str("b | X (a U b)")
     assert not spot.check_equiv(f, g).equiv
+    del spot
+
+
+@pytest.mark.docker
+def test_spot_exclusive_word():
+    spot = Spot()
+    f = LTLFormula.from_str("a U b")
+    g = LTLFormula.from_str("b | X (a U b)")
+    equiv, word = spot.exclusive_word(f, g)
+    assert not equiv.equiv
+    assert SymbolicTrace.from_str("!a & !b ; { b }") == word
+    del spot
 
 
 @pytest.mark.docker

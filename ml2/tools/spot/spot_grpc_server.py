@@ -24,6 +24,7 @@ from ...grpc.ltl import (
 )
 from ...grpc.mealy import mealy_pb2
 from ...grpc.spot import spot_pb2_grpc
+from ...grpc.trace import trace_pb2
 from ...ltl.ltl_mc import LTLMCStatus
 from ...trace import SymbolicTrace, TraceMCStatus
 from ..ltl_tool import ToolLTLMCProblem, ToolLTLMCSolution, ToolLTLSynProblem, ToolLTLSynSolution
@@ -176,6 +177,16 @@ class SpotServicer(spot_pb2_grpc.SpotServicer):
             end = time.time()
             logger.info("Multiprocessing and checking equivalence took %f seconds", end - start)
             if process.exitcode == 0:
+                if "exclusive_word" in result:
+                    return ltl_equiv_pb2.LTLEquivSolution(
+                        status=result["status"],
+                        time=result["time"],
+                        exclusive_word=trace_pb2.Trace(
+                            trace=SymbolicTrace.from_str(
+                                result["exclusive_word"], spot=True
+                            ).to_str()
+                        ),
+                    )
                 return ltl_equiv_pb2.LTLEquivSolution(
                     status=result["status"],
                     time=result["time"],
@@ -189,7 +200,18 @@ class SpotServicer(spot_pb2_grpc.SpotServicer):
             check_equiv(request.formula1, request.formula2, result)
             end = time.time()
             logger.info("Checking equivalence took %f seconds", end - start)
-            return ltl_equiv_pb2.LTLEquivSolution(status=result["status"], time=result["time"])
+            if "exclusive_word" in result:
+                return ltl_equiv_pb2.LTLEquivSolution(
+                    status=result["status"],
+                    time=result["time"],
+                    exclusive_word=trace_pb2.Trace(
+                        trace=SymbolicTrace.from_str(result["exclusive_word"], spot=True).to_str()
+                    ),
+                )
+            return ltl_equiv_pb2.LTLEquivSolution(
+                status=result["status"],
+                time=result["time"],
+            )
 
     def CheckEquivRenaming(self, request, context):
         from .spot_wrapper import check_equiv_renaming

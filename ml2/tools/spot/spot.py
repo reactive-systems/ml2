@@ -3,7 +3,7 @@
 import json
 import logging
 from datetime import timedelta
-from typing import Generator, Iterator, List
+from typing import Generator, Iterator, List, Optional, Tuple
 
 from grpc._channel import _InactiveRpcError
 
@@ -94,6 +94,9 @@ class Spot(GRPCService):
             yield ToolLTLMCSolution.from_pb2_LTLMCSolution(solution)
 
     def check_equiv(self, f: LTLFormula, g: LTLFormula, timeout: float = None) -> LTLEquivStatus:
+        """
+        Checks if two formulas are semantically equivalent.
+        """
         pb_problem = ltl_equiv_pb2.LTLEquivProblem(
             formula1=f.to_str(notation="infix"),
             formula2=g.to_str(notation="infix"),
@@ -113,6 +116,37 @@ class Spot(GRPCService):
         )
         pb_solution = self.stub.CheckEquivRenaming(pb_problem)
         return LTLEquivStatus(pb_solution.status)
+
+    def exclusive_word(
+        self, f: LTLFormula, g: LTLFormula, timeout: float = None
+    ) -> Tuple[LTLEquivStatus, Optional[SymbolicTrace]]:
+        """
+        Checks if two formulas are semantically equivalent.
+        Returns a word accepted by exactly one of the two formulas if not.
+        """
+        pb_problem = ltl_equiv_pb2.LTLEquivProblem(
+            formula1=f.to_str(notation="infix"),
+            formula2=g.to_str(notation="infix"),
+            timeout=timeout,
+        )
+        pb_solution = self.stub.CheckEquiv(pb_problem)
+        return LTLEquivStatus(pb_solution.status), SymbolicTrace.from_str(
+            pb_solution.exclusive_word.trace
+        )
+
+    # def contains(self, f: LTLFormula, g: LTLFormula, timeout: float = None) -> bool:
+    #     """
+    #     Test if the language of g is included in that of f.
+    #     The inclusion check if performed by ensuring that the automaton associated to g does not intersect the automaton associated to the complement of f.
+    #     """
+    #     # TODO
+    #     pb_problem = ltl_equiv_pb2.LTLEquivProblem(
+    #         formula1=f.to_str(notation="infix"),
+    #         formula2=g.to_str(notation="infix"),
+    #         timeout=timeout,
+    #     )
+    #     pb_solution = self.stub.CheckEquiv(pb_problem)
+    #     return LTLEquivStatus(pb_solution.status)
 
     def check_sat(self, formula: LTLFormula, simplify: bool = False, timeout: int = None):
         pb_problem = ltl_sat_pb2.LTLSatProblem(

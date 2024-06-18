@@ -5,7 +5,9 @@ isort:skip_file
 import builtins
 import google.protobuf.descriptor
 import google.protobuf.message
+import ml2.grpc.trace.trace_pb2
 import sys
+import typing
 
 if sys.version_info >= (3, 8):
     import typing as typing_extensions
@@ -14,7 +16,6 @@ else:
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
-@typing_extensions.final
 class LTLEquivProblem(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -37,22 +38,28 @@ class LTLEquivProblem(google.protobuf.message.Message):
 
 global___LTLEquivProblem = LTLEquivProblem
 
-@typing_extensions.final
 class LTLEquivSolution(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     STATUS_FIELD_NUMBER: builtins.int
     TIME_FIELD_NUMBER: builtins.int
+    EXCLUSIVE_WORD_FIELD_NUMBER: builtins.int
     status: builtins.str
     time: builtins.float
+    @property
+    def exclusive_word(self) -> ml2.grpc.trace.trace_pb2.Trace: ...
     def __init__(
         self,
         *,
         status: builtins.str = ...,
         time: builtins.float | None = ...,
+        exclusive_word: ml2.grpc.trace.trace_pb2.Trace | None = ...,
     ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["_time", b"_time", "time", b"time"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["_time", b"_time", "status", b"status", "time", b"time"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_exclusive_word", b"_exclusive_word", "_time", b"_time", "exclusive_word", b"exclusive_word", "time", b"time"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_exclusive_word", b"_exclusive_word", "_time", b"_time", "exclusive_word", b"exclusive_word", "status", b"status", "time", b"time"]) -> None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_exclusive_word", b"_exclusive_word"]) -> typing_extensions.Literal["exclusive_word"] | None: ...
+    @typing.overload
     def WhichOneof(self, oneof_group: typing_extensions.Literal["_time", b"_time"]) -> typing_extensions.Literal["time"] | None: ...
 
 global___LTLEquivSolution = LTLEquivSolution
