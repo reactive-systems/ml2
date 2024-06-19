@@ -1,14 +1,11 @@
 """Spot symbolic trace model checker"""
 
-from ...dtypes import String
 from ...ltl.ltl_equiv import LTLEquivStatus
+from ...ltl.ltl_formula import LTLFormula
 from ...verifier import EquivVerifier
 from .spot import Spot
 
 
 class SpotEquivVerifier(Spot, EquivVerifier):
-    def verify_equiv(self, x: String, y: String, **kwargs) -> LTLEquivStatus:
-        status, time = self.check_equiv(
-            formula1=x.to_str(), formula2=y.to_str(), timeout=10
-        )  # TODO broken
-        return LTLEquivStatus(status=status)
+    def verify_equiv(self, x: LTLFormula, y: LTLFormula, **kwargs) -> LTLEquivStatus:
+        return self.check_equiv(f=x, g=y, timeout=10)
