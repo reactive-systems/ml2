@@ -14,7 +14,7 @@ from ...grpc.mealy import mealy_pb2
 from ...grpc.spot import spot_pb2, spot_pb2_grpc
 from ...grpc.tools.tools_pb2 import SetupRequest
 from ...ltl import LTLFormula
-from ...ltl.ltl_equiv import LTLEquivStatus
+from ...ltl.ltl_equiv import LTLEquivStatus, LTLInclStatus
 from ...ltl.ltl_mc import LTLMCStatus
 from ...ltl.ltl_sat import LTLSatStatus
 from ...ltl.ltl_syn import LTLSynStatus
@@ -134,19 +134,44 @@ class Spot(GRPCService):
             pb_solution.exclusive_word.trace
         )
 
-    # def contains(self, f: LTLFormula, g: LTLFormula, timeout: float = None) -> bool:
-    #     """
-    #     Test if the language of g is included in that of f.
-    #     The inclusion check if performed by ensuring that the automaton associated to g does not intersect the automaton associated to the complement of f.
-    #     """
-    #     # TODO
-    #     pb_problem = ltl_equiv_pb2.LTLEquivProblem(
-    #         formula1=f.to_str(notation="infix"),
-    #         formula2=g.to_str(notation="infix"),
-    #         timeout=timeout,
-    #     )
-    #     pb_solution = self.stub.CheckEquiv(pb_problem)
-    #     return LTLEquivStatus(pb_solution.status)
+    def inclusion_stream(
+        self,
+        problems: Generator[Tuple[LTLFormula, LTLFormula], None, None],
+        timeout: Optional[float] = None,
+    ) -> Generator[LTLInclStatus, None, None]:
+
+        if timeout is not None:
+            raise Exception("Timeout not implement for inclusion check")
+
+        def _problems(problems):
+            for left, right in problems:
+                yield ltl_equiv_pb2.LTLEquivProblem(
+                    formula1=left.to_str(notation="infix"),
+                    formula2=right.to_str(notation="infix"),
+                    timeout=timeout,
+                )
+
+        for solution in self.stub.Inclusion(_problems(problems)):
+            yield LTLInclStatus(solution.status)
+
+    def inclusion(
+        self, left: LTLFormula, right: LTLFormula, timeout: Optional[float] = None
+    ) -> LTLInclStatus:
+        """
+        Test if the language of left is included in that of right and vice versa.
+        """
+
+        if timeout is not None:
+            raise Exception("Timeout not implement for inclusion check")
+
+        def _problem():
+            yield ltl_equiv_pb2.LTLEquivProblem(
+                formula1=left.to_str(notation="infix"),
+                formula2=right.to_str(notation="infix"),
+                timeout=timeout,
+            )
+
+        return LTLInclStatus(next(self.stub.Inclusion(_problem())).status)
 
     def check_sat(self, formula: LTLFormula, simplify: bool = False, timeout: int = None):
         pb_problem = ltl_sat_pb2.LTLSatProblem(

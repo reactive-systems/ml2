@@ -55,6 +55,11 @@ class SpotStub(object):
                 request_serializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivProblem.SerializeToString,
                 response_deserializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivSolution.FromString,
                 )
+        self.Inclusion = channel.stream_stream(
+                '/Spot/Inclusion',
+                request_serializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivProblem.SerializeToString,
+                response_deserializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivSolution.FromString,
+                )
         self.CheckEquivRenaming = channel.unary_unary(
                 '/Spot/CheckEquivRenaming',
                 request_serializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivProblem.SerializeToString,
@@ -143,6 +148,15 @@ class SpotServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Inclusion(self, request_iterator, context):
+        """Checks whether one formula is included in the other. Takes pairs of
+        formulas and checks both ways. Uses efficient caching for a stream of
+        pairs.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def CheckEquivRenaming(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -215,6 +229,11 @@ def add_SpotServicer_to_server(servicer, server):
             ),
             'CheckEquiv': grpc.unary_unary_rpc_method_handler(
                     servicer.CheckEquiv,
+                    request_deserializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivProblem.FromString,
+                    response_serializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivSolution.SerializeToString,
+            ),
+            'Inclusion': grpc.stream_stream_rpc_method_handler(
+                    servicer.Inclusion,
                     request_deserializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivProblem.FromString,
                     response_serializer=ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivSolution.SerializeToString,
             ),
@@ -362,6 +381,23 @@ class Spot(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/Spot/CheckEquiv',
+            ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivProblem.SerializeToString,
+            ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivSolution.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Inclusion(request_iterator,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.stream_stream(request_iterator, target, '/Spot/Inclusion',
             ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivProblem.SerializeToString,
             ml2_dot_grpc_dot_ltl_dot_ltl__equiv__pb2.LTLEquivSolution.FromString,
             options, channel_credentials,

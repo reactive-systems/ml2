@@ -7,7 +7,7 @@ import time
 from concurrent import futures
 from datetime import datetime
 from multiprocessing import Manager, Process, set_start_method
-from typing import Dict, Generator, List, Set
+from typing import Dict, Generator, List, Set, Tuple
 
 import grpc
 
@@ -163,6 +163,18 @@ class SpotServicer(spot_pb2_grpc.SpotServicer):
             ],
             version="2.11.6",
         )
+
+    def Inclusion(
+        self, request_iterator, context
+    ) -> Generator[ltl_equiv_pb2.LTLEquivSolution, None, None]:
+        from .spot_wrapper import inclusion
+
+        def _problems(request_iterator) -> Generator[Tuple[str, str], None, None]:
+            for request in request_iterator:
+                yield request.formula1, request.formula2
+
+        for status, duration in inclusion(_problems(request_iterator)):
+            yield ltl_equiv_pb2.LTLEquivSolution(status=status, time=duration)
 
     def CheckEquiv(self, request, context):
         from .spot_wrapper import check_equiv

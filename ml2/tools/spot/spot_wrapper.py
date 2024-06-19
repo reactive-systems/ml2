@@ -8,7 +8,7 @@ from copy import deepcopy
 from datetime import datetime
 from itertools import product
 from multiprocessing import Manager, Process
-from typing import Any, Dict, Optional, Set
+from typing import Any, Dict, Generator, Optional, Set, Tuple
 
 import spot
 
@@ -268,34 +268,35 @@ def check_equiv(formula1: str, formula2: str, result: dict) -> None:
         result["time"] = end - start
 
 
-# def contains(formulas: List[Tuple[str]], result: dict) -> None:
-#     start = time.time()
+def inclusion(
+    problems: Generator[Tuple[str, str], None, None]
+) -> Generator[Tuple[str, float], None, None]:
 
-#     lcc = spot.language_containment_checker()
-#     result["containments"]
+    lcc = spot.language_containment_checker()
+    for left, right in problems:
+        start = time.time()
 
+        try:
+            spot_left = spot.formula(left)
+            spot_right = spot.formula(right)
 
-#     try:
+            if lcc.are_equivalent(left, right):
+                end = time.time()
+                yield "equivalent", end - start
 
-#         for formula1, formula2 in formulas:
-#             spot_formula_1 = spot.formula(formula1)
-#             spot_formula_2 = spot.formula(formula2)
-#             result[]
-
-
-#         if spot_formula_1.contains(spot_formula_2):
-#             end = time.time()
-#             result["status"] = "contains"
-#             result["time"] = end - start
-#         else:
-#             end = time.time()
-#             result["status"] = "inequivalent"
-#             result["time"] = end - start
-#     except Exception as e:
-#         print(e)
-#         result["status"] = "error"
-#         end = time.time()
-#         result["time"] = end - start
+            elif spot_left.contains(spot_right):
+                end = time.time()
+                yield "only_left_in_right", end - start
+            elif spot_right.contains(spot_left):
+                end = time.time()
+                yield "only_right_in_left", end - start
+            else:
+                end = time.time()
+                yield "incomparable", end - start
+        except Exception as e:
+            print(e)
+            end = time.time()
+            yield "error", end - start
 
 
 def mc_trace(formula: str, trace: str, result):

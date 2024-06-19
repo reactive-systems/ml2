@@ -8,5 +8,7 @@ from .spot import Spot
 
 class SpotEquivVerifier(Spot, EquivVerifier):
     def verify_equiv(self, x: String, y: String, **kwargs) -> LTLEquivStatus:
-        status, time = self.check_equiv(formula1=x.to_str(), formula2=y.to_str(), timeout=10)
+        status, time = self.check_equiv(
+            formula1=x.to_str(), formula2=y.to_str(), timeout=10
+        )  # TODO broken
         return LTLEquivStatus(status=status)

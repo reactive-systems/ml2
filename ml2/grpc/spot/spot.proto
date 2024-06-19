@@ -8,7 +8,6 @@ import "ml2/grpc/ltl/ltl_sat.proto";
 import "ml2/grpc/ltl/ltl_syn.proto";
 import "ml2/grpc/ltl/ltl_trace_mc.proto";
 import "ml2/grpc/mealy/mealy.proto";
-import "ml2/grpc/system/system.proto";
 import "ml2/grpc/tools/tools.proto";
 
 message RandLTLArgs {
@@ -44,6 +43,10 @@ service Spot {
   // Checks whether two formulas are equivalent. If not, returns a word accepted
   // by exactly one of the two formulas.
   rpc CheckEquiv(LTLEquivProblem) returns (LTLEquivSolution) {}
+  // Checks whether one formula is included in the other. Takes pairs of
+  // formulas and checks both ways. Uses efficient caching for a stream of
+  // pairs.
+  rpc Inclusion(stream LTLEquivProblem) returns (stream LTLEquivSolution) {}
 
   rpc CheckEquivRenaming(LTLEquivProblem) returns (LTLEquivSolution) {}
 
