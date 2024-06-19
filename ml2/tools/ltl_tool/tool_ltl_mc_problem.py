@@ -13,7 +13,7 @@ from ...ltl.ltl_mc import LTLMCSolution, LTLMCStatus
 from ...ltl.ltl_spec import DecompLTLSpec, LTLSpec
 from ...ltl.ltl_syn import LTLRealStatus
 from ...mealy import MealyMachine
-from ...trace import SymbolicTrace
+from ...trace import SymbolicTrace, Trace
 from .pb2_converter import SpecificationConverterPb2, SystemConverterPb2, TimeConverterPb2
 
 logging.basicConfig(level=logging.INFO)
@@ -138,7 +138,7 @@ class ToolLTLMCSolution(CSVLoggable, TimeConverterPb2):
         detailed_status: str,
         tool: str,
         time: Optional[timedelta] = None,
-        counterexample: Optional[SymbolicTrace] = None,
+        counterexample: Optional[Trace] = None,
     ) -> None:
         self.status = status
         self.detailed_status = detailed_status
@@ -200,7 +200,7 @@ class ToolLTLMCSolution(CSVLoggable, TimeConverterPb2):
         return (
             ["detailed_status"]
             + LTLMCStatus.csv_field_header(**kwargs)
-            + SymbolicTrace.csv_field_header(**kwargs)
+            + Trace.csv_field_header(**kwargs)
             + ["tool"]
             + cls.time_csv_field_header(**kwargs)
         )
@@ -209,6 +209,42 @@ class ToolLTLMCSolution(CSVLoggable, TimeConverterPb2):
     def from_pb2_LTLMCSolution(
         cls, pb2_obj: ltl_mc_pb2.LTLMCSolution, **kwargs
     ) -> "ToolLTLMCSolution":
+        status: LTLMCStatus = LTLMCStatus.from_pb2_LTLMCStatus(
+            pb2_obj.status, pb2_obj.detailed_status, **kwargs
+        )
+        detailed_status: str = pb2_obj.detailed_status
+        tool: str = pb2_obj.tool
+        time: timedelta = cls.from_time_tb2(pb2_obj.time, **kwargs)
+        try:
+            trace = Trace.from_str(pb2_obj.counterexample.trace)
+        except Exception:
+            trace = None
+
+        return cls(
+            status=status,
+            detailed_status=detailed_status,
+            tool=tool,
+            time=time,
+            counterexample=trace,
+        )
+
+
+class ToolLTLMCSolutionSymbolic(ToolLTLMCSolution):
+
+    @classmethod
+    def _csv_field_header(cls, **kwargs) -> List[str]:
+        return (
+            ["detailed_status"]
+            + LTLMCStatus.csv_field_header(**kwargs)
+            + SymbolicTrace.csv_field_header(**kwargs)
+            + ["tool"]
+            + cls.time_csv_field_header(**kwargs)
+        )
+
+    @classmethod
+    def from_pb2_LTLMCSolution(
+        cls, pb2_obj: ltl_mc_pb2.LTLMCSolution, **kwargs
+    ) -> "ToolLTLMCSolutionSymbolic":
         status: LTLMCStatus = LTLMCStatus.from_pb2_LTLMCStatus(
             pb2_obj.status, pb2_obj.detailed_status, **kwargs
         )

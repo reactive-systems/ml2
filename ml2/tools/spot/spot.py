@@ -20,7 +20,12 @@ from ...ltl.ltl_sat import LTLSatStatus
 from ...ltl.ltl_syn import LTLSynStatus
 from ...trace import SymbolicTrace, TraceMCStatus
 from ..grpc_service import GRPCService
-from ..ltl_tool import ToolLTLMCProblem, ToolLTLMCSolution, ToolLTLSynProblem, ToolLTLSynSolution
+from ..ltl_tool import (
+    ToolLTLMCProblem,
+    ToolLTLMCSolutionSymbolic,
+    ToolLTLSynProblem,
+    ToolLTLSynSolution,
+)
 from .spot_grpc_server import serve
 
 logging.basicConfig(level=logging.INFO)
@@ -68,13 +73,13 @@ class Spot(GRPCService):
     def model_check(
         self,
         problem: ToolLTLMCProblem,
-    ) -> ToolLTLMCSolution:
+    ) -> ToolLTLMCSolutionSymbolic:
         try:
-            return ToolLTLMCSolution.from_pb2_LTLMCSolution(
+            return ToolLTLMCSolutionSymbolic.from_pb2_LTLMCSolution(
                 self.stub.ModelCheck(problem.to_pb2_LTLMCProblem())
             )
         except _InactiveRpcError as err:
-            return ToolLTLMCSolution(
+            return ToolLTLMCSolutionSymbolic(
                 status=LTLMCStatus("error"),
                 detailed_status="ERROR:\n" + str(err),
                 tool="Spot",
@@ -84,14 +89,14 @@ class Spot(GRPCService):
     def model_check_stream(
         self,
         problems: Generator[ToolLTLMCProblem, None, None],
-    ) -> Generator[ToolLTLMCSolution, None, None]:
+    ) -> Generator[ToolLTLMCSolutionSymbolic, None, None]:
         def _problems(problems):
             for problem in problems:
                 assert problem.circuit is not None
                 yield problem.to_pb2_LTLMCProblem()
 
         for solution in self.stub.ModelCheckStream(_problems(problems)):
-            yield ToolLTLMCSolution.from_pb2_LTLMCSolution(solution)
+            yield ToolLTLMCSolutionSymbolic.from_pb2_LTLMCSolution(solution)
 
     def check_equiv(self, f: LTLFormula, g: LTLFormula, timeout: float = None) -> LTLEquivStatus:
         """
