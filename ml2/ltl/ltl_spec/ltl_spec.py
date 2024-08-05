@@ -195,6 +195,7 @@ class LTLSpec(LTLFormula):
             renamed_outputs = map(renaming.get, self.outputs)
 
         self.rename(renaming)
+        self.reset_aps()
 
         inv_renaming = {v: k for k, v in renaming.items()}
         return inv_renaming
