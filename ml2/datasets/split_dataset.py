@@ -1,7 +1,7 @@
 """Split dataset"""
 
 import logging
-from typing import Any, Dict, Generator, Generic, List, Type, TypeVar
+from typing import Any, Callable, Dict, Generator, Generic, List, Type, TypeVar
 
 from ..dtypes import DType
 from ..gcp_bucket import path_exists
@@ -106,6 +106,10 @@ class SplitDataset(Dataset[T], Generic[T, DT]):
     def shuffle(self, splits: List[str] = None) -> None:
         for name in splits if splits else self.split_names:
             self[name].shuffle()
+
+    def apply(self, fn: Callable[[T], T], splits: List[str] = None) -> None:
+        for name in splits if splits else self.split_names:
+            self[name].apply(fn=fn)
 
     @property
     def size(self) -> int:

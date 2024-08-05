@@ -3,7 +3,7 @@
 import csv
 import logging
 import os
-from typing import Any, Dict, Generator, Type, TypeVar
+from typing import Any, Callable, Dict, Generator, Type, TypeVar
 
 import pandas as pd
 
@@ -75,6 +75,11 @@ class CSVDataset(Dataset[T]):
 
     def sample(self, n: int) -> None:
         self.df = self.df.sample(n=n)
+
+    def apply(self, fn: Callable[[T], T]) -> None:
+        rows = [fn(s) for s in self.generator()]
+        df = pd.DataFrame.from_records([s.to_csv_fields() for s in rows])
+        self.df = df
 
     @classmethod
     def config_preprocessors(cls) -> list:
