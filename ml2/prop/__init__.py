@@ -1,4 +1,6 @@
+from . import cnf
 from .assignment import Assignment
+from .assignment_check_status import AssignmentCheckStatus
 from .prop_formula import PropFormula
 from .prop_lexer import lex_prop
 from .prop_parser import parse_prop
