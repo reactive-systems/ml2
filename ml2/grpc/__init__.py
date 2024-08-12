@@ -1,5 +1,6 @@
 from .aalta import aalta_pb2, aalta_pb2_grpc
 from .aiger import aiger_pb2, aiger_pb2_grpc
+from .booleforce import booleforce_pb2, booleforce_pb2_grpc
 from .bosy import bosy_pb2, bosy_pb2_grpc
 from .limboole import limboole_pb2, limboole_pb2_grpc
 from .ltl import ltl_mc_pb2, ltl_pb2, ltl_syn_pb2

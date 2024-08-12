@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+import "ml2/grpc/prop/prop.proto";
+
+service BooleForce {
+    // check satisfiability
+    rpc CheckSat(CNFSatProblem) returns (CNFSatSolution) {}
+    // check resolution proof
+    rpc TraceCheck(ResProofCheckProblem) returns (ResProofCheckSolution) {}
+    // binarize resolution proof
+    rpc BinarizeResProof(ResProof) returns (ResProof) {}
+}
