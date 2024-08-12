@@ -7,7 +7,7 @@ import time
 from concurrent import futures
 from datetime import datetime
 from multiprocessing import Manager, Process, set_start_method
-from typing import Dict, Generator, List, Set
+from typing import Dict, Generator, List, Set, Tuple
 
 import grpc
 
@@ -24,6 +24,7 @@ from ...grpc.ltl import (
 )
 from ...grpc.mealy import mealy_pb2
 from ...grpc.spot import spot_pb2_grpc
+from ...grpc.trace import trace_pb2
 from ...ltl.ltl_mc import LTLMCStatus
 from ...trace import SymbolicTrace, TraceMCStatus
 from ..ltl_tool import ToolLTLMCProblem, ToolLTLMCSolution, ToolLTLSynProblem, ToolLTLSynSolution
@@ -88,9 +89,11 @@ class SpotServicer(spot_pb2_grpc.SpotServicer):
             args=(
                 problem.specification.to_str(notation="infix"),
                 problem.circuit.to_str() if problem.circuit is not None else None,
-                problem.mealy_machine.to_hoa(realizable=problem.realizable)
-                if problem.mealy_machine is not None
-                else None,
+                (
+                    problem.mealy_machine.to_hoa(realizable=problem.realizable)
+                    if problem.mealy_machine is not None
+                    else None
+                ),
                 problem.realizable,
                 result,
             ),
@@ -161,6 +164,18 @@ class SpotServicer(spot_pb2_grpc.SpotServicer):
             version="2.11.6",
         )
 
+    def Inclusion(
+        self, request_iterator, context
+    ) -> Generator[ltl_equiv_pb2.LTLEquivSolution, None, None]:
+        from .spot_wrapper import inclusion
+
+        def _problems(request_iterator) -> Generator[Tuple[str, str], None, None]:
+            for request in request_iterator:
+                yield request.formula1, request.formula2
+
+        for status, duration in inclusion(_problems(request_iterator)):
+            yield ltl_equiv_pb2.LTLEquivSolution(status=status, time=duration)
+
     def CheckEquiv(self, request, context):
         from .spot_wrapper import check_equiv
 
@@ -176,6 +191,16 @@ class SpotServicer(spot_pb2_grpc.SpotServicer):
             end = time.time()
             logger.info("Multiprocessing and checking equivalence took %f seconds", end - start)
             if process.exitcode == 0:
+                if "exclusive_word" in result:
+                    return ltl_equiv_pb2.LTLEquivSolution(
+                        status=result["status"],
+                        time=result["time"],
+                        exclusive_word=trace_pb2.Trace(
+                            trace=SymbolicTrace.from_str(
+                                result["exclusive_word"], spot=True
+                            ).to_str()
+                        ),
+                    )
                 return ltl_equiv_pb2.LTLEquivSolution(
                     status=result["status"],
                     time=result["time"],
@@ -189,7 +214,18 @@ class SpotServicer(spot_pb2_grpc.SpotServicer):
             check_equiv(request.formula1, request.formula2, result)
             end = time.time()
             logger.info("Checking equivalence took %f seconds", end - start)
-            return ltl_equiv_pb2.LTLEquivSolution(status=result["status"], time=result["time"])
+            if "exclusive_word" in result:
+                return ltl_equiv_pb2.LTLEquivSolution(
+                    status=result["status"],
+                    time=result["time"],
+                    exclusive_word=trace_pb2.Trace(
+                        trace=SymbolicTrace.from_str(result["exclusive_word"], spot=True).to_str()
+                    ),
+                )
+            return ltl_equiv_pb2.LTLEquivSolution(
+                status=result["status"],
+                time=result["time"],
+            )
 
     def CheckEquivRenaming(self, request, context):
         from .spot_wrapper import check_equiv_renaming

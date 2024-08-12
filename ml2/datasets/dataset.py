@@ -4,7 +4,7 @@ import logging
 import os
 import os.path
 from abc import abstractmethod
-from typing import Any, Dict, Generator, Generic, Type, TypeVar
+from typing import Any, Callable, Dict, Generator, Generic, Type, TypeVar
 
 from ..artifact import Artifact
 from ..dtypes.dtype import DType
@@ -86,6 +86,11 @@ class Dataset(Artifact, Generic[T]):
     @abstractmethod
     def shuffle(self, seed: int = None) -> None:
         """Shuffles the dataset"""
+        raise NotImplementedError()
+
+    @abstractmethod
+    def apply(self, fn: Callable[[T], T]) -> None:
+        """Apply a function to each sample in the Dataset"""
         raise NotImplementedError()
 
     @property

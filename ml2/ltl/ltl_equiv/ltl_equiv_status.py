@@ -20,13 +20,17 @@ class LTLEquivStatus(EquivStatus, Cat, CSV):
     int_to_status = INT_TO_STATUS
 
     def __init__(self, status: str) -> None:
-        if status not in ["equivalent", "inequivalent", "timeout", "error"]:
+        if status not in self.status_to_int:
             raise Exception(f"Invalid status {status}")
         self._status = status
 
     @property
+    def valid(self) -> bool:
+        return self._status in ["equivalent", "inequivalent"]
+
+    @property
     def equiv(self) -> bool:
-        if self._status not in ["equivalent", "inequivalent"]:
+        if not self.valid:
             raise Exception(f"Cannot determine equivalence of status {self._status}")
         return self._status == "equivalent"
 

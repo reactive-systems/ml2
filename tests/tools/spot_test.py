@@ -38,6 +38,16 @@ def test_spot_equiv():
     f = LTLFormula.from_str("a U b")
     g = LTLFormula.from_str("b | (a & X (a U b))")
     assert spot.check_equiv(f, g).equiv
+    del spot
+
+
+@pytest.mark.docker
+def test_spot_incl_1():
+    spot = Spot()
+    f = LTLFormula.from_str("a U b")
+    g = LTLFormula.from_str("b | (a & X (a U b))")
+    assert spot.inclusion(f, g).equiv
+    del spot
 
 
 @pytest.mark.docker
@@ -46,6 +56,7 @@ def test_spot_equiv_renaming():
     f = LTLFormula.from_str("(F G ! x1) & F x1 & !x2 & x3 & (x4 | !x4) ")
     g = LTLFormula.from_str("!a & F (b & X G ! b) & c")
     assert spot.check_equiv_renaming(f, g).equiv
+    del spot
 
 
 @pytest.mark.docker
@@ -54,6 +65,51 @@ def test_spot_not_equiv():
     f = LTLFormula.from_str("a U b")
     g = LTLFormula.from_str("b | X (a U b)")
     assert not spot.check_equiv(f, g).equiv
+    del spot
+
+
+@pytest.mark.docker
+def test_spot_incl_2():
+    spot = Spot()
+    f = LTLFormula.from_str("G F a")
+    g = LTLFormula.from_str("F G a")
+    assert not spot.inclusion(f, g).right_in_left
+    assert spot.inclusion(f, g).left_in_right
+    del spot
+
+
+@pytest.mark.docker
+def test_spot_incl_stream():
+    spot = Spot()
+    a = LTLFormula.from_str("G F a")
+    b = LTLFormula.from_str("F G a")
+    c = LTLFormula.from_str("X X X G F a")
+    d = LTLFormula.from_str("F a")
+
+    def gen():
+        for t in [(a, b), (b, c), (c, d), (a, d), (a, d)]:
+            yield t
+
+    results = list(spot.inclusion_stream(gen()))
+    assert [r.status for r in results] == [
+        "only_left_in_right",
+        "only_right_in_left",
+        "only_right_in_left",
+        "only_right_in_left",
+        "only_right_in_left",
+    ]
+    del spot
+
+
+@pytest.mark.docker
+def test_spot_exclusive_word():
+    spot = Spot()
+    f = LTLFormula.from_str("a U b")
+    g = LTLFormula.from_str("b | X (a U b)")
+    equiv, word = spot.exclusive_word(f, g)
+    assert not equiv.equiv
+    assert SymbolicTrace.from_str("!a & !b ; { b }") == word
+    del spot
 
 
 @pytest.mark.docker
@@ -159,6 +215,7 @@ def test_spot_mc_2():
     assert solution.detailed_status == "VIOLATED"
     assert solution.tool == spot.tool
     assert solution.time_seconds > 0
+    assert solution.counterexample == SymbolicTrace.from_str("{ g1 & g2 ; !g1 & !g2 }")
     del spot
 
 

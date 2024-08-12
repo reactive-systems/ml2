@@ -4,10 +4,9 @@ import logging
 import os
 
 import numpy as np
+import wandb
 from transformers import Seq2SeqTrainer, Seq2SeqTrainingArguments
 from transformers.trainer_utils import get_last_checkpoint
-
-import wandb
 
 from ..datasets import Dataset
 from ..pipelines import HFPTText2TextPipeline
@@ -55,6 +54,9 @@ class HFSeq2SeqTrainer(Trainer):
         self.val_freq = val_freq
         self.warmup_steps = warmup_steps
         self.weight_decay = weight_decay
+
+        if self.checkpoint_name is None:
+            self.checkpoint_name = self.full_name + "/ckpts"
 
     def train(self):
         super().train()

@@ -3,7 +3,7 @@
 import json
 import logging
 from datetime import timedelta
-from typing import Generator, Iterator, List
+from typing import Generator, Iterator, List, Optional, Tuple
 
 from grpc._channel import _InactiveRpcError
 
@@ -14,13 +14,18 @@ from ...grpc.mealy import mealy_pb2
 from ...grpc.spot import spot_pb2, spot_pb2_grpc
 from ...grpc.tools.tools_pb2 import SetupRequest
 from ...ltl import LTLFormula
-from ...ltl.ltl_equiv import LTLEquivStatus
+from ...ltl.ltl_equiv import LTLEquivStatus, LTLInclStatus
 from ...ltl.ltl_mc import LTLMCStatus
 from ...ltl.ltl_sat import LTLSatStatus
 from ...ltl.ltl_syn import LTLSynStatus
 from ...trace import SymbolicTrace, TraceMCStatus
 from ..grpc_service import GRPCService
-from ..ltl_tool import ToolLTLMCProblem, ToolLTLMCSolution, ToolLTLSynProblem, ToolLTLSynSolution
+from ..ltl_tool import (
+    ToolLTLMCProblem,
+    ToolLTLMCSolutionSymbolic,
+    ToolLTLSynProblem,
+    ToolLTLSynSolution,
+)
 from .spot_grpc_server import serve
 
 logging.basicConfig(level=logging.INFO)
@@ -68,13 +73,13 @@ class Spot(GRPCService):
     def model_check(
         self,
         problem: ToolLTLMCProblem,
-    ) -> ToolLTLMCSolution:
+    ) -> ToolLTLMCSolutionSymbolic:
         try:
-            return ToolLTLMCSolution.from_pb2_LTLMCSolution(
+            return ToolLTLMCSolutionSymbolic.from_pb2_LTLMCSolution(
                 self.stub.ModelCheck(problem.to_pb2_LTLMCProblem())
             )
         except _InactiveRpcError as err:
-            return ToolLTLMCSolution(
+            return ToolLTLMCSolutionSymbolic(
                 status=LTLMCStatus("error"),
                 detailed_status="ERROR:\n" + str(err),
                 tool="Spot",
@@ -84,16 +89,19 @@ class Spot(GRPCService):
     def model_check_stream(
         self,
         problems: Generator[ToolLTLMCProblem, None, None],
-    ) -> Generator[ToolLTLMCSolution, None, None]:
+    ) -> Generator[ToolLTLMCSolutionSymbolic, None, None]:
         def _problems(problems):
             for problem in problems:
                 assert problem.circuit is not None
                 yield problem.to_pb2_LTLMCProblem()
 
         for solution in self.stub.ModelCheckStream(_problems(problems)):
-            yield ToolLTLMCSolution.from_pb2_LTLMCSolution(solution)
+            yield ToolLTLMCSolutionSymbolic.from_pb2_LTLMCSolution(solution)
 
     def check_equiv(self, f: LTLFormula, g: LTLFormula, timeout: float = None) -> LTLEquivStatus:
+        """
+        Checks if two formulas are semantically equivalent.
+        """
         pb_problem = ltl_equiv_pb2.LTLEquivProblem(
             formula1=f.to_str(notation="infix"),
             formula2=g.to_str(notation="infix"),
@@ -113,6 +121,62 @@ class Spot(GRPCService):
         )
         pb_solution = self.stub.CheckEquivRenaming(pb_problem)
         return LTLEquivStatus(pb_solution.status)
+
+    def exclusive_word(
+        self, f: LTLFormula, g: LTLFormula, timeout: float = None
+    ) -> Tuple[LTLEquivStatus, Optional[SymbolicTrace]]:
+        """
+        Checks if two formulas are semantically equivalent.
+        Returns a word accepted by exactly one of the two formulas if not.
+        """
+        pb_problem = ltl_equiv_pb2.LTLEquivProblem(
+            formula1=f.to_str(notation="infix"),
+            formula2=g.to_str(notation="infix"),
+            timeout=timeout,
+        )
+        pb_solution = self.stub.CheckEquiv(pb_problem)
+        return LTLEquivStatus(pb_solution.status), SymbolicTrace.from_str(
+            pb_solution.exclusive_word.trace
+        )
+
+    def inclusion_stream(
+        self,
+        problems: Generator[Tuple[LTLFormula, LTLFormula], None, None],
+        timeout: Optional[float] = None,
+    ) -> Generator[LTLInclStatus, None, None]:
+
+        if timeout is not None:
+            raise Exception("Timeout not implement for inclusion check")
+
+        def _problems(problems):
+            for left, right in problems:
+                yield ltl_equiv_pb2.LTLEquivProblem(
+                    formula1=left.to_str(notation="infix"),
+                    formula2=right.to_str(notation="infix"),
+                    timeout=timeout,
+                )
+
+        for solution in self.stub.Inclusion(_problems(problems)):
+            yield LTLInclStatus(solution.status)
+
+    def inclusion(
+        self, left: LTLFormula, right: LTLFormula, timeout: Optional[float] = None
+    ) -> LTLInclStatus:
+        """
+        Test if the language of left is included in that of right and vice versa.
+        """
+
+        if timeout is not None:
+            raise Exception("Timeout not implement for inclusion check")
+
+        def _problem():
+            yield ltl_equiv_pb2.LTLEquivProblem(
+                formula1=left.to_str(notation="infix"),
+                formula2=right.to_str(notation="infix"),
+                timeout=timeout,
+            )
+
+        return LTLInclStatus(next(self.stub.Inclusion(_problem())).status)
 
     def check_sat(self, formula: LTLFormula, simplify: bool = False, timeout: int = None):
         pb_problem = ltl_sat_pb2.LTLSatProblem(
