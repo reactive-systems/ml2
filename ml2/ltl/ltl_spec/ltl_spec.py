@@ -235,7 +235,7 @@ class LTLSpec(LTLFormula):
         if self.name is not None:
             d["name"] = self.name
         if notation is not None:
-            d["notation"] = notation.value
+            d["notation"] = notation
         if self.semantics is not None:
             d["semantics"] = self.semantics
         return d

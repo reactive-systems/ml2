@@ -55,7 +55,7 @@ def bosy_worker_fn_dict(
             problem = DecompLTLSpec.from_dict(problem_dict)
             solution = bosy.synthesize_spec(spec=problem, optimize=optimize, timeout=timeout)
             status = solution.status
-            circuit = solution.circuit.to_str()
+            circuit = solution.circuit.to_str() if solution.circuit is not None else ""
             time = solution.time
             problem_dict.update({"status": status, "circuit": circuit, "syn_time": time})
         ray.get(ds_server.post_solved_problems.remote(problems))

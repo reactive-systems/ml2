@@ -449,16 +449,17 @@ def main(args):
     ray.get(dataset_writer_result)
     timeouts_queue.put(None)
     ray.get(timeouts_writer_result)
-    split_dataset = LTLSynSplitDataset.load(args.name, project="ltl-syn")
+    # TODO code below not working anymore
+    # split_dataset = LTLSynSplitDataset.load(args.name, project="ltl-syn")
     # stats = split_dataset.stats(['train', 'val', 'test'])
     # stats_file = os.path.join(folder_path, 'circuit-stats.json')
     # write_stats(stats, stats_file)
     # plot_file = os.path.join(folder_path, 'circuit-stats.png')
     # plot_stats(stats, plot_file)
-    split_dataset.shuffle()
-    split_dataset.save(
-        name=args.name, upload=args.upload, overwrite_local=True, add_to_wandb=args.add_to_wandb
-    )
+    # split_dataset.shuffle()
+    # split_dataset.save(
+    #     name=args.name, upload=args.upload, overwrite_local=True, add_to_wandb=args.add_to_wandb
+    # )
 
 
 if __name__ == "__main__":

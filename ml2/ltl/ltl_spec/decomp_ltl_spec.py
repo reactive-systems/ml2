@@ -105,7 +105,7 @@ class LTLProperties(DecompBinaryExpr, LTLSpec):
         if self.name is not None:
             fields["name"] = self.name
         if notation is not None:
-            fields["notation"] = notation.value
+            fields["notation"] = notation
         if self.semantics is not None:
             fields["semantics"] = self.semantics
         return fields
@@ -128,20 +128,22 @@ class LTLProperties(DecompBinaryExpr, LTLSpec):
     @classmethod
     def from_dict(cls: Type[T], d: Dict[str, Any], **kwargs) -> T:
         return cls(
-            sub_exprs=[
-                LTLSpec.from_dict(
-                    d={
-                        "formula": a,
-                        "inputs": d["inputs"],
-                        "outputs": d["outputs"],
-                        "notation": d.get("notation", "infix"),
-                        "semantics": d.get("semantics", None),
-                    },
-                )
-                for a in d["properties"]
-            ]
-            if "properties" in d and d["properties"] is not None
-            else None,
+            sub_exprs=(
+                [
+                    LTLSpec.from_dict(
+                        d={
+                            "formula": a,
+                            "inputs": d["inputs"],
+                            "outputs": d["outputs"],
+                            "notation": d.get("notation", "infix"),
+                            "semantics": d.get("semantics", None),
+                        },
+                    )
+                    for a in d["properties"]
+                ]
+                if "properties" in d and d["properties"] is not None
+                else None
+            ),
             inputs=d["inputs"],
             outputs=d["outputs"],
             name=d.get("name", None),
@@ -191,7 +193,7 @@ class LTLAssumptions(LTLProperties):
         if self.name is not None:
             fields["name"] = self.name
         if notation is not None:
-            fields["notation"] = notation.value
+            fields["notation"] = notation
         if self.semantics is not None:
             fields["semantics"] = self.semantics
         return fields
@@ -214,20 +216,22 @@ class LTLAssumptions(LTLProperties):
     @classmethod
     def from_dict(cls, d: Dict[str, Any], **kwargs) -> "LTLAssumptions":
         return cls(
-            sub_exprs=[
-                LTLSpec.from_dict(
-                    d={
-                        "formula": a,
-                        "inputs": d["inputs"],
-                        "outputs": d["outputs"],
-                        "notation": d.get("notation", "infix"),
-                        "semantics": d.get("semantics", None),
-                    },
-                )
-                for a in d["assumptions"]
-            ]
-            if "assumptions" in d and d["assumptions"] is not None
-            else None,
+            sub_exprs=(
+                [
+                    LTLSpec.from_dict(
+                        d={
+                            "formula": a,
+                            "inputs": d["inputs"],
+                            "outputs": d["outputs"],
+                            "notation": d.get("notation", "infix"),
+                            "semantics": d.get("semantics", None),
+                        },
+                    )
+                    for a in d["assumptions"]
+                ]
+                if "assumptions" in d and d["assumptions"] is not None
+                else None
+            ),
             inputs=d["inputs"],
             outputs=d["outputs"],
             name=d.get("name", None),
@@ -246,7 +250,7 @@ class LTLGuarantees(LTLProperties):
         if self.name is not None:
             fields["name"] = self.name
         if notation is not None:
-            fields["notation"] = notation.value
+            fields["notation"] = notation
         if self.semantics is not None:
             fields["semantics"] = self.semantics
         return fields
@@ -269,20 +273,22 @@ class LTLGuarantees(LTLProperties):
     @classmethod
     def from_dict(cls, d: Dict[str, Any], **kwargs) -> "LTLGuarantees":
         return cls(
-            sub_exprs=[
-                LTLSpec.from_dict(
-                    d={
-                        "formula": g,
-                        "inputs": d["inputs"],
-                        "outputs": d["outputs"],
-                        "notation": d.get("notation", "infix"),
-                        "semantics": d.get("semantics", None),
-                    },
-                )
-                for g in d["guarantees"]
-            ]
-            if "guarantees" in d and d["guarantees"] is not None
-            else None,
+            sub_exprs=(
+                [
+                    LTLSpec.from_dict(
+                        d={
+                            "formula": g,
+                            "inputs": d["inputs"],
+                            "outputs": d["outputs"],
+                            "notation": d.get("notation", "infix"),
+                            "semantics": d.get("semantics", None),
+                        },
+                    )
+                    for g in d["guarantees"]
+                ]
+                if "guarantees" in d and d["guarantees"] is not None
+                else None
+            ),
             inputs=d["inputs"],
             outputs=d["outputs"],
             name=d.get("name", None),
@@ -417,7 +423,7 @@ class DecompLTLSpec(DecompBinaryExprPair, LTLSpec):
         if self.name is not None:
             fields["name"] = self.name
         if notation is not None:
-            fields["notation"] = notation.value
+            fields["notation"] = notation
         if self.semantics is not None:
             fields["semantics"] = self.semantics
         return fields
@@ -549,12 +555,14 @@ class DecompLTLSpec(DecompBinaryExprPair, LTLSpec):
         with open(filepath, "r") as spec_file:
             return cls.from_bosy_str(
                 bosy_str=spec_file.read(),
-                name=ntpath.basename(filepath)[:-5]
-                if ntpath.basename(filepath).endswith(".json")
-                else (
-                    ntpath.basename(filepath)[:-4]
-                    if ntpath.basename(filepath).endswith(".ltl")
-                    else ntpath.basename(filepath)
+                name=(
+                    ntpath.basename(filepath)[:-5]
+                    if ntpath.basename(filepath).endswith(".json")
+                    else (
+                        ntpath.basename(filepath)[:-4]
+                        if ntpath.basename(filepath).endswith(".ltl")
+                        else ntpath.basename(filepath)
+                    )
                 ),
             )
 

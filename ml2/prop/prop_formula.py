@@ -22,7 +22,7 @@ class PropFormula(BinaryExpr, CSV):
     def _to_csv_fields(self, notation: str = None, **kwargs) -> Dict[str, str]:
         fields = {"formula": self.to_str(notation=notation)}
         if notation is not None:
-            fields["notation"] = notation.value
+            fields["notation"] = notation
         return fields
 
     @classmethod
