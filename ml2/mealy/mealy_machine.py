@@ -60,9 +60,11 @@ class HoaHeader(Hashable):
                         self.format_version,
                         self.num_states,
                         sorted(self.aps) if self.aps is not None else None,
-                        sorted(self.controllable_aps)
-                        if self.controllable_aps is not None
-                        else None,
+                        (
+                            sorted(self.controllable_aps)
+                            if self.controllable_aps is not None
+                            else None
+                        ),
                         self.init_state,
                         self.alias,
                         self.acceptance,
@@ -110,11 +112,11 @@ class HoaHeader(Hashable):
             format_version=header_dict.pop("HOA"),
             num_states=int(header_dict.pop("States")),
             aps=aps,
-            controllable_aps_num=list(
-                int(i) for i in header_dict.pop("controllable-AP").split(" ")
-            )
-            if "controllable-AP" in header_dict.keys()
-            else None,
+            controllable_aps_num=(
+                list(int(i) for i in header_dict.pop("controllable-AP").split(" "))
+                if "controllable-AP" in header_dict.keys()
+                else None
+            ),
             init_state=int(header_dict.pop("Start")),
             alias=header_dict.pop("Alias") if "Alias" in header_dict.keys() else None,
             acceptance=(
@@ -159,29 +161,31 @@ class HoaHeader(Hashable):
             self.acc_name,
             self.acceptance,
             " ".join(self.properties),
-            " ".join(
-                [
-                    str(x[1])
-                    for x in (
-                        filter(
-                            lambda x: x[0][0] == "o",
-                            [(self.aps[i], i) for i in range(self.ap_num)],
+            (
+                " ".join(
+                    [
+                        str(x[1])
+                        for x in (
+                            filter(
+                                lambda x: x[0][0] == "o",
+                                [(self.aps[i], i) for i in range(self.ap_num)],
+                            )
                         )
-                    )
-                ]
-                if realizable
-                else [
-                    str(x[1])
-                    for x in (
-                        filter(
-                            lambda x: x[0][0] == "i",
-                            [(self.aps[i], i) for i in range(self.ap_num)],
+                    ]
+                    if realizable
+                    else [
+                        str(x[1])
+                        for x in (
+                            filter(
+                                lambda x: x[0][0] == "i",
+                                [(self.aps[i], i) for i in range(self.ap_num)],
+                            )
                         )
-                    )
-                ]
-            )
-            if self.controllable_aps_num is None
-            else " ".join([str(i) for i in self.controllable_aps_num]),
+                    ]
+                )
+                if self.controllable_aps_num is None
+                else " ".join([str(i) for i in self.controllable_aps_num])
+            ),
             "\n".join((key + ": " + self.remainder[key]) for key in self.remainder.keys())
             + ("\n" if self.remainder else ""),
         )

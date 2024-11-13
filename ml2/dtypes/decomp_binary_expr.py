@@ -33,7 +33,7 @@ class DecompBinaryExpr(GenericDecompDType[T], BinaryExpr, Generic[T]):
     def ast(self) -> BinaryAST:
         return self.comp_asts([se.ast for se in self])
 
-    def to_tokens(self, notation: str = None, **kwargs) -> List[str]:
+    def to_tokens(self, *, notation: str = None, **kwargs) -> List[str]:
         if notation is None:
             notation = self._notation if self._notation is not None else "infix"
         return self.comp_token_lists(
@@ -41,15 +41,15 @@ class DecompBinaryExpr(GenericDecompDType[T], BinaryExpr, Generic[T]):
             notation=notation,
         )
 
-    def to_str(self, notation: Optional[str] = None) -> str:
+    def to_str(self, *, notation: Optional[str] = None, **kwargs) -> str:
         if notation is None and len(self) > 0:
             notation = self[0]._notation
         return self.comp_strs(strs=self.to_strs(notation=notation), notation=notation)
 
-    def to_strs(self, notation: Optional[str] = None) -> List[str]:
+    def to_strs(self, *, notation: Optional[str] = None) -> List[str]:
         if notation is None and len(self) > 0:
             notation = self[0]._notation
-        return [se.to_str(notation) for se in self]
+        return [se.to_str(notation=notation) for se in self]
 
     def rename(self, rename: Dict[str, str]):
         for expr in self.sub_exprs:
@@ -60,12 +60,12 @@ class DecompBinaryExpr(GenericDecompDType[T], BinaryExpr, Generic[T]):
         return cls.from_asts(asts=[ast], **kwargs)
 
     @classmethod
-    def from_str(cls, s: str, notation: str = "infix", **kwargs) -> "DecompBinaryExpr[T]":
+    def from_str(cls, s: str, *, notation: str = "infix", **kwargs) -> "DecompBinaryExpr[T]":
         return cls.from_strs(strs=[s], notation=notation, **kwargs)
 
     @classmethod
     def from_tokens(
-        cls, tokens: List[str], notation: str = "infix", **kwargs
+        cls, tokens: List[str], *, notation: str = "infix", **kwargs
     ) -> "DecompBinaryExpr[T]":
         return cls.from_token_lists(token_lists=[tokens], notation=notation, **kwargs)
 

@@ -96,7 +96,7 @@ class ResProof(CSV, Seq, String):
             reward += len(rc_tokens) * [str(num_rcs - i)]
         return tokens, reward
 
-    def to_str(self, notation: str = "tracecheck") -> str:
+    def to_str(self, *, notation: str = "tracecheck") -> str:
         if notation == "tracecheck":
             return "".join([f"{rc.tracecheck_str}\n" for rc in self.res_clauses])
         elif notation == "tracecheck-sorted":

@@ -16,7 +16,7 @@ class Trace(CSVWithId, Seq):
         self.prefix = prefix if prefix else []
         self.cycle = cycle
 
-    def to_str(self, notation: str = "standard", **kwargs) -> str:
+    def to_str(self, *, notation: str = "standard", **kwargs) -> str:
         prefix_str = " ; ".join(
             [p.to_str(not_op="!", delimiter=" , ", **kwargs) for p in self.prefix]
         )

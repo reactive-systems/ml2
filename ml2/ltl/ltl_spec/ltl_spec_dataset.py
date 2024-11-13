@@ -188,7 +188,7 @@ class LTLSpecDataset(Dataset[DecompLTLSpec]):
             output_aps,
         )
 
-    def stats(self):
+    def stats(self, **kwargs):
         """Computes statistics of the dataset"""
         num_inputs = [spec.num_inputs for spec in self.dataset]
         num_outputs = [spec.num_outputs for spec in self.dataset]

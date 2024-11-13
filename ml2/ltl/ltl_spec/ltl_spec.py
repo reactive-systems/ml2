@@ -37,8 +37,8 @@ class LTLSpec(LTLFormula):
         semantics: str = None,
         tokens: List[str] = None,
     ):
-        self.inputs = inputs if inputs else []
-        self.outputs = outputs if outputs else []
+        self.inputs: List[str] = inputs if inputs else []
+        self.outputs: List[str] = outputs if outputs else []
         self.name = name
         self.semantics = semantics
 
@@ -64,7 +64,7 @@ class LTLSpec(LTLFormula):
             hashlib.sha3_224(
                 str(
                     (
-                        self.to_str("prefix"),
+                        self.to_str(notation="prefix"),
                         self.semantics,
                         sorted([i for i in self.inputs]),
                         sorted([o for o in self.outputs]),
@@ -97,6 +97,11 @@ class LTLSpec(LTLFormula):
     def num_outputs(self) -> int:
         """Number of outputs"""
         return len(self.outputs)
+
+    @property
+    def num_aps(self) -> int:
+        """Number of atomic propositions"""
+        return self.num_inputs + self.num_outputs
 
     def deduce_inputs(self, inputs: Optional[List[str]] = None) -> List[str]:
         if inputs is None:

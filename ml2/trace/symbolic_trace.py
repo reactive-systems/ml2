@@ -15,16 +15,22 @@ class SymbolicTrace(Trace):
         self.cycle = [p.strip() for p in cycle]
         self._notation = notation
 
-    def to_str(self, notation: str = None, spot: bool = False, **kwargs) -> str:
+    def to_str(self, *, notation: str = None, spot: bool = False, **kwargs) -> str:
         if not notation or notation == self._notation:
             prefix_str = " ; ".join(self.prefix)
             cycle_str = " ; ".join(self.cycle)
         else:
             prefix_str = " ; ".join(
-                [PropFormula.from_str(p, self._notation).to_str(notation) for p in self.prefix]
+                [
+                    PropFormula.from_str(p, notation=self._notation).to_str(notation=notation)
+                    for p in self.prefix
+                ]
             )
             cycle_str = " ; ".join(
-                [PropFormula.from_str(c, self._notation).to_str(notation) for c in self.cycle]
+                [
+                    PropFormula.from_str(c, notation=self._notation).to_str(notation=notation)
+                    for c in self.cycle
+                ]
             )
 
         return (
@@ -32,23 +38,25 @@ class SymbolicTrace(Trace):
         )
 
     def _to_csv_fields(self, notation: str = None, **kwargs) -> Dict[str, str]:
-        fields = {"trace": self.to_str(notation)}
+        fields = {"trace": self.to_str(notation=notation)}
         return fields
 
     @classmethod
     def _csv_field_header(cls, **kwargs) -> List[str]:
         return ["trace"]
 
-    def to_tokens(self, notation: str = None, **kwargs) -> List[str]:
+    def to_tokens(self, *, notation: str = None, **kwargs) -> List[str]:
         prefix_tokens = [
             t
             for p in self.prefix
-            for t in PropFormula.from_str(p, self._notation).to_tokens(notation) + [";"]
+            for t in PropFormula.from_str(p, notation=self._notation).to_tokens(notation=notation)
+            + [";"]
         ]
         cycle_tokens = [
             t
             for p in self.cycle
-            for t in PropFormula.from_str(p, self._notation).to_tokens(notation) + [";"]
+            for t in PropFormula.from_str(p, notation=self._notation).to_tokens(notation=notation)
+            + [";"]
         ][
             :-1
         ]  # remove last semicolon

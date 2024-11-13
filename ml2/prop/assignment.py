@@ -14,6 +14,7 @@ class Assignment(CSV, Seq):
 
     def to_str(
         self,
+        *,
         assign_op: str = None,
         not_op: str = None,
         delimiter: str = ",",
@@ -37,7 +38,7 @@ class Assignment(CSV, Seq):
         return {"assignment": self.to_str(**kwargs)}
 
     def to_tokens(
-        self, assign_op: str = None, not_op: str = None, delimiter: str = None, **kwargs
+        self, *, assign_op: str = None, not_op: str = None, delimiter: str = None, **kwargs
     ) -> List[str]:
         if assign_op is None:
             if not_op is None:

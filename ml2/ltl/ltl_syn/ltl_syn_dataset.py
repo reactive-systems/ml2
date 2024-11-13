@@ -144,7 +144,7 @@ class LTLSynSplitDataset(SplitDataset):
     def __init__(self, project: str = LTL_SYN_PROJECT_NAME, **kwargs):
         super().__init__(project=project, **kwargs)
 
-    def stats(self, splits: list = None):
+    def stats(self, *, splits: list = None, **kwargs):
         counts = {
             MAX_VAR_INDEX: [],
             NUM_INPUTS: [],
@@ -168,7 +168,7 @@ class LTLSynSplitDataset(SplitDataset):
         return stats_from_counts(counts)
 
     def plot_stats(self, splits: list = None):
-        stats = self.stats(splits)
+        stats = self.stats(splits=splits)
 
         def plot_stats(stats: dict, filepath: str, title: str = None):
             file_dir = os.path.dirname(filepath)

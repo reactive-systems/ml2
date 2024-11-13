@@ -38,18 +38,18 @@ class LTLFormula(BinaryExpr, CSVWithId):
 
     @property
     def cr_hash(self) -> int:
-        return int(hashlib.sha3_224(self.to_str("prefix").encode()).hexdigest(), 16)
+        return int(hashlib.sha3_224(self.to_str(notation="prefix").encode()).hexdigest(), 16)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.ast == other.ast
         return False
 
-    def _to_csv_fields(self, notation: str = None, **kwargs) -> Dict[str, str]:
+    def _to_csv_fields(self, *, notation: str = None, **kwargs) -> Dict[str, str]:
         fields = {"formula": self.to_str(notation=notation)}
         return fields
 
-    def to_pb2_LTLFormula(self, notation: Optional[str] = None, **kwargs):
+    def to_pb2_LTLFormula(self, *, notation: Optional[str] = None, **kwargs):
         if notation is None:
             if self._notation is None:
                 notation = "infix"
@@ -66,7 +66,7 @@ class LTLFormula(BinaryExpr, CSVWithId):
 
     @classmethod
     def _from_csv_fields(
-        cls, fields: Dict[str, str], notation: str = None, **kwargs
+        cls, fields: Dict[str, str], *, notation: str = None, **kwargs
     ) -> "LTLFormula":
         return cls(formula=fields["formula"], notation=notation)
 
@@ -77,15 +77,16 @@ class LTLFormula(BinaryExpr, CSVWithId):
         )
 
     def to_tokens(
-        self, notation: str = None, precedence: Optional[List[Dict[str, Any]]] = None, **kwargs
+        self, *, notation: str = None, precedence: Optional[List[Dict[str, Any]]] = None, **kwargs
     ) -> List[str]:
         if precedence is not None and notation == "infix-min-pars":
             precedence = DEFAULT_PRECEDENCE
             notation = "infix"
-        return super().to_tokens(notation, precedence, **kwargs)
+        return super().to_tokens(notation=notation, precedence=precedence, **kwargs)
 
     def to_str(
         self,
+        *,
         notation: Optional[str] = None,
         precedence: Optional[List[Dict[str, Any]]] = None,
         **kwargs,
@@ -97,7 +98,7 @@ class LTLFormula(BinaryExpr, CSVWithId):
                 )
             precedence = DEFAULT_PRECEDENCE
             notation = "infix"
-        return super().to_str(notation, precedence, **kwargs)
+        return super().to_str(notation=notation, precedence=precedence, **kwargs)
 
     @staticmethod
     def lex(expr: str) -> List[str]:

@@ -33,11 +33,11 @@ class BinaryExpr(Seq):
                 self._ast = self.parse(self.to_str())
         return self._ast
 
-    def size(self, notation: str = None, **kwargs) -> int:
+    def size(self, *, notation: str = None, **kwargs) -> int:
         return self.ast.size(notation=notation, **kwargs)
 
     def to_tokens(
-        self, notation: str = None, precedence: Optional[List[Dict[str, Any]]] = None, **kwargs
+        self, *, notation: str = None, precedence: Optional[List[Dict[str, Any]]] = None, **kwargs
     ) -> List[str]:
         tokens = []
         if notation is None:
@@ -56,6 +56,7 @@ class BinaryExpr(Seq):
 
     def to_str(
         self,
+        *,
         notation: Optional[str] = None,
         precedence: Optional[List[Dict[str, Any]]] = None,
         **kwargs
@@ -76,11 +77,11 @@ class BinaryExpr(Seq):
         return cls(ast=ast)
 
     @classmethod
-    def from_str(cls: Type[T], formula: str, notation: str = "infix", **kwargs) -> T:
+    def from_str(cls: Type[T], formula: str, *, notation: str = "infix", **kwargs) -> T:
         return cls(formula=formula, notation=notation)
 
     @classmethod
-    def from_tokens(cls: Type[T], tokens: List[str], notation: str = "infix", **kwargs) -> T:
+    def from_tokens(cls: Type[T], tokens: List[str], *, notation: str = "infix", **kwargs) -> T:
         return cls(tokens=tokens, notation=notation)
 
     @staticmethod

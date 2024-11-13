@@ -59,7 +59,7 @@ class BinaryAST(Tree[str], Seq):
             raise ValueError()
         return self[1]
 
-    def size(self, notation: str = None, **kwargs) -> int:
+    def size(self, *, notation: str = None, **kwargs) -> int:
         if notation is None:
             return super().size(**kwargs)
         else:
@@ -91,7 +91,11 @@ class BinaryAST(Tree[str], Seq):
         return new_ast
 
     def to_tokens(
-        self, notation: str = "infix", precedence: Optional[List[Dict[str, Any]]] = None, **kwargs
+        self,
+        *,
+        notation: str = "infix",
+        precedence: Optional[List[Dict[str, Any]]] = None,
+        **kwargs,
     ) -> List[str]:
         # example for precedence in LTL:
         # all missing operators or missing associativity will lead to unambiguous parenthesizing:
@@ -147,7 +151,7 @@ class BinaryAST(Tree[str], Seq):
         else:
             raise ValueError(f"Unsupported expression notation {notation}")
 
-    def to_str(self, space: bool = True, **kwargs) -> str:
+    def to_str(self, *, space: bool = True, **kwargs) -> str:
         token_list = self.to_tokens(**kwargs)
         if space:
             return " ".join(token_list)
