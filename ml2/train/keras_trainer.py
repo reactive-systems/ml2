@@ -9,7 +9,7 @@ import tensorflow as tf
 import wandb
 from keras.callbacks import Callback
 from keras.optimizers import Optimizer
-from wandb.keras import WandbMetricsLogger
+from wandb.integration.keras import WandbMetricsLogger
 
 from ..datasets import Dataset
 from ..optim.tf_optim import load_tf_optimizer_from_config, tf_optimizer_to_config
