@@ -202,3 +202,20 @@ class BinaryAST(Tree[str], Seq):
                 return lhs_pos_list + new_enc + rhs_pos_list
             else:
                 logging.critical(f"Unsupported notation {notation}")
+
+    def commutative_equal(self, other, commutative_operators: List[str]) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        if self.label != other.label:
+            return False
+        if len(self) != len(other):
+            return False
+        child_equal = True
+        for c1, c2 in zip(self, other):
+            child_equal = child_equal and c1.commutative_equal(c2, commutative_operators)
+        if self.label in commutative_operators:
+            child_equal = child_equal or (
+                self.lhs.commutative_equal(other.rhs, commutative_operators)
+                and self.rhs.commutative_equal(other.lhs, commutative_operators)
+            )
+        return child_equal
