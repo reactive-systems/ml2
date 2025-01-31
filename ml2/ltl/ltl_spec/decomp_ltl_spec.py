@@ -4,6 +4,7 @@ import hashlib
 import json
 import ntpath
 from copy import deepcopy
+from itertools import chain
 from random import sample
 from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
 
@@ -35,6 +36,13 @@ class LTLProperties(DecompBinaryExpr, LTLSpec):
         self.semantics = semantics
 
         DecompBinaryExpr.__init__(self, sub_exprs=sub_exprs)
+
+    @classmethod
+    def join(cls: Type[T], *guarantees: T) -> T:
+        inputs = list(set(chain(*[g.inputs for g in guarantees])))
+        outputs = list(set(chain(*[g.outputs for g in guarantees])))
+        sub_exprs = list(chain(*[g.sub_exprs for g in guarantees]))
+        return cls(sub_exprs=sub_exprs, inputs=inputs, outputs=outputs)
 
     @property
     def cr_hash(self) -> int:
@@ -313,6 +321,16 @@ class DecompLTLSpec(DecompBinaryExprPair, LTLSpec):
         self.semantics = semantics
 
         DecompBinaryExprPair.__init__(self, fst=assumptions, snd=guarantees)
+
+    @classmethod
+    def join_guarantees(cls, *specs: "DecompLTLSpec") -> "DecompLTLSpec":
+        assert len(specs) > 0
+        assert all(x.assumptions == specs[0].assumptions for x in specs)
+        assumptions = specs[0].assumptions
+        inputs: List[str] = list(set(chain(*[s.inputs for s in specs])))
+        outputs: List[str] = list(set(chain(*[s.outputs for s in specs])))
+        guarantees = LTLGuarantees.join(*[s.guarantees for s in specs])
+        return cls(assumptions, guarantees, inputs, outputs)
 
     @property
     def unique_mod_aps(self) -> int:

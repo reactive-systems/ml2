@@ -100,8 +100,11 @@ class Tree(list, Generic[T]):
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            equal = self.label == other.label
-            equal = equal and len(self) == len(other)
+            if self.label != other.label:
+                return False
+            if len(self) != len(other):
+                return False
+            equal = True
             for c1, c2 in zip(self, other):
                 equal = equal and c1 == c2
             return equal
