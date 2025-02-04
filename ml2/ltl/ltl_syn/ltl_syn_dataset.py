@@ -5,6 +5,7 @@ import csv
 import logging
 import os
 import re
+from typing import Any, Dict, Generator, Self
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -12,14 +13,15 @@ from matplotlib.ticker import MaxNLocator
 from tqdm import tqdm
 
 from ... import aiger
+from ...artifact import Artifact
 from ...datasets import SplitDataset
 from ...datasets.csv_dataset import CSVDataset
 from ...datasets.stats import stats_from_counts
 from ...datasets.utils import to_csv_str
 from ...globals import LTL_SYN_ALIASES, LTL_SYN_PROJECT_NAME
 from ...registry import register_type
-from ..ltl_spec import LTLSpec
-from .decomp_ltl_syn_problem import DecompLTLSynProblem
+from ..ltl_spec import DecompLTLSpec, LTLSpec
+from .decomp_ltl_syn_problem import DecompLTLSynProblem, LTLSynSolution
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -71,6 +73,45 @@ class LTLSynDataset(CSVDataset[DecompLTLSynProblem]):
 
     def __init__(self, project: str = LTL_SYN_PROJECT_NAME, **kwargs):
         super().__init__(project=project, **kwargs)
+
+    def stats(self, **kwargs):
+        def spec_stats(spec: DecompLTLSpec) -> Dict[str, float]:
+            flattened: Dict[str, float] = {}
+            for k, v in spec.property_stats().items():
+                flattened = {**flattened, **{k + "_" + ki: vi for ki, vi in v.items()}}
+            return {
+                **flattened,
+                "spec_num_inputs": spec.num_inputs,
+                "spec_num_outputs": spec.num_outputs,
+                "spec_num_aps": spec.num_aps,
+                "spec_num_guarantees": len(spec.guarantees),
+                "spec_num_assumptions": len(spec.assumptions),
+                "spec_num_properties": len(spec.guarantees) + len(spec.assumptions),
+                "spec_size": spec.size(),
+            }
+
+        def circuit_stats(circ: aiger.AIGERCircuit) -> Dict[str, float]:
+            return {
+                "circ_num_inputs": circ.num_inputs,
+                "circ_num_outputs": circ.num_outputs,
+                "circ_num_latches": circ.num_latches,
+                "circ_num_ands": circ.num_ands,
+                "circ_max_var_id": circ.max_var_id,
+            }
+
+        def solution_stats(solution: LTLSynSolution) -> Dict[str, float]:
+            return {**circuit_stats(solution.circuit), "realizable": solution.status.to_int()}
+
+        def problem_stats(problem: DecompLTLSynProblem) -> Dict[str, float]:
+            return {**spec_stats(problem.ltl_spec), **solution_stats(problem.ltl_syn_solution)}
+
+        def stats_gen() -> Generator[Dict[str, float], None, None]:
+            fn = problem_stats if self.dtype == DecompLTLSynProblem else spec_stats
+            for el in tqdm(self.generator(), total=self.size):
+                yield fn(el)
+
+        stats_list = list(stats_gen())
+        return stats_from_counts({k: [dic[k] for dic in stats_list] for k in stats_list[0]})
 
 
 class LTLSynCurriculumDataset(CSVDataset):
@@ -144,61 +185,66 @@ class LTLSynSplitDataset(SplitDataset):
     def __init__(self, project: str = LTL_SYN_PROJECT_NAME, **kwargs):
         super().__init__(project=project, **kwargs)
 
-    def stats(self, *, splits: list = None, **kwargs):
-        counts = {
-            MAX_VAR_INDEX: [],
-            NUM_INPUTS: [],
-            NUM_LATCHES: [],
-            NUM_OUTPUTS: [],
-            NUM_AND_GATES: [],
-        }
-        for _, circuit in self.generator(splits):
-            (
-                num_var_index,
-                num_inputs,
-                num_latches,
-                num_outputs,
-                num_and_gates,
-            ) = aiger.header_ints_from_str(circuit)
-            counts[MAX_VAR_INDEX].append(num_var_index)
-            counts[NUM_INPUTS].append(num_inputs)
-            counts[NUM_LATCHES].append(num_latches)
-            counts[NUM_OUTPUTS].append(num_outputs)
-            counts[NUM_AND_GATES].append(num_and_gates)
-        return stats_from_counts(counts)
+    @classmethod
+    def load_from_deprecated(cls, name: str, project: str, unsupervised_splits: list[str]) -> Self:
+        """
+        Load a dataset from the deprecated format.
 
-    def plot_stats(self, splits: list = None):
-        stats = self.stats(splits=splits)
+        Args:
+            name (str): The name of the dataset.
+            project (str): The project associated with the dataset.
+            unsupervised_splits (list[str]): A list of split names that are unsupervised.
 
-        def plot_stats(stats: dict, filepath: str, title: str = None):
-            file_dir = os.path.dirname(filepath)
-            if not os.path.isdir(file_dir):
-                os.makedirs(file_dir)
-            fig, ax = plt.subplots()
-            max_value = stats["max"]
-            min_value = stats["min"]
-            bins = stats["bins"]
-            ax.bar(range(max_value + 1), bins, color="#3071ff", width=0.7, align="center")
-            if title:
-                ax.set_title(title)
-            ax.set_xlim(min_value - 1, max_value + 1)
-            ax.set_ylim(0, max(bins) + 1)
-            ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-            ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-            plt.savefig(filepath, dpi=fig.dpi, facecolor="white", format="eps")
-            if title:
-                logging.info("%s statistics plotted to %s", title, filepath)
+        Returns:
+            Self: An instance of the class with the loaded dataset.
+        """
+        path = Artifact.local_path_from_name(name, project=project)
 
-        filepath = os.path.join(self.stats_path, "max_var_id.eps")
-        plot_stats(stats[MAX_VAR_INDEX], filepath, "Maximal Variable Index")
-        filepath = os.path.join(self.stats_path, "num_inputs.eps")
-        plot_stats(stats[NUM_INPUTS], filepath, "Number of Inputs")
-        filepath = os.path.join(self.stats_path, "max_num_latches.eps")
-        plot_stats(stats[NUM_LATCHES], filepath, "Number of Latches")
-        filepath = os.path.join(self.stats_path, "num_outputs.eps")
-        plot_stats(stats[NUM_OUTPUTS], filepath, "Number of Outputs")
-        filepath = os.path.join(self.stats_path, "num_and_gates.eps")
-        plot_stats(stats[NUM_AND_GATES], filepath, "Number of AND Gates")
+        splits = {}
+        for split in [
+            ".".join(x.split(".")[:-1])
+            for x in os.listdir(path)
+            if not os.path.isdir(os.path.join(path, x)) and x.endswith("csv")
+        ]:
+            split_ds = LTLSynDataset(
+                project=project,
+                name=os.path.join(name, split),
+                dtype=DecompLTLSynProblem if split in unsupervised_splits else DecompLTLSpec,
+                filename=split + ".csv",
+            )
+            file = os.path.join(path, split) + ".csv"
+            split_ds.df = pd.read_csv(file, sep=",").fillna("")
+            splits[split] = split_ds
+        ds = cls(name=name, project=project, dtype=DecompLTLSynProblem, splits=splits)
+        return ds
+
+    @classmethod
+    def convert_deprecated(cls, name: str, project: str, unsupervised_splits: list[str]) -> Self:
+        """
+        Converts the deprecated dataset format to the current format.
+
+        This method loads a dataset using a deprecated format, saves it in the current format,
+        and removes the old CSV files.
+
+        Args:
+            name (str): The name of the dataset.
+            project (str): The project to which the dataset belongs.
+            unsupervised_splits (list[str]): Indicates the splits that are unsupervised.
+
+        Returns:
+            Dataset: The converted dataset object.
+        """
+        path = Artifact.local_path_from_name(name, project=project)
+
+        ds = cls.load_from_deprecated(name, project, unsupervised_splits)
+        ds.save(recurse=True)
+        for split in [
+            ".".join(x.split(".")[:-1])
+            for x in os.listdir(path)
+            if not os.path.isdir(os.path.join(path, x)) and x.endswith("csv")
+        ]:
+            os.remove(os.path.join(path, split) + ".csv")
+        return ds
 
 
 def space_dataset(path: str, num_next: int = 2):

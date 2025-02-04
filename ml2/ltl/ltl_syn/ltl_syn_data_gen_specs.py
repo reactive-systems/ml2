@@ -7,11 +7,12 @@ import json
 import logging
 import os.path
 import sys
+import time
 
 import ray
 from ray.util.queue import Queue
 
-from ...data_gen import ProgressActor, progress_bar
+from ...data_gen import ProgressActor, progress_bar, progress_bar_init
 from ...datasets import Dataset, load_dataset
 from ...tools.bosy import add_bosy_args, bosy_worker_fn
 from ...tools.strix import add_strix_args, strix_worker_fn
@@ -176,31 +177,38 @@ def main(args):
     )
     timeouts_file = os.path.join(folder_path, "timeouts.csv")
     timeouts_writer_result = csv_file_writer.remote(timeouts_queue, timeouts_file)
+    pbar = progress_bar_init(progress_actor, specs.size)
     if args.tool == "bosy":
-        worker_results = [
-            bosy_worker_fn.remote(
-                ds_actor,
-                id=i,
-                optimize=args.bosy_optimize,
-                port=50051 + i,
-                timeout=args.bosy_timeout,
+        worker_results = []
+        for i in range(args.num_workers):
+            worker_results.append(
+                bosy_worker_fn.remote(
+                    ds_actor,
+                    id=i,
+                    optimize=args.bosy_optimize,
+                    port=50051 + i,
+                    timeout=args.bosy_timeout,
+                    mem_limit=args.mem_lim_workers,
+                )
             )
-            for i in range(args.num_workers)
-        ]
+            time.sleep(args.sleep_workers)
     elif args.tool == "strix":
-        worker_results = [
-            strix_worker_fn.remote(
-                ds_actor,
-                id=i,
-                port=50051 + i,
-                minimize_aiger=args.strix_auto,
-                timeout=args.strix_timeout,
+        worker_results = []
+        for i in range(args.num_workers):
+            worker_results.append(
+                strix_worker_fn.remote(
+                    ds_actor,
+                    id=i,
+                    port=50051 + i,
+                    minimize_aiger=args.strix_auto,
+                    timeout=args.strix_timeout,
+                    mem_limit=args.mem_lim_workers,
+                )
             )
-            for i in range(args.num_workers)
-        ]
+            time.sleep(args.sleep_workers)
     else:
         sys.exit(f"Unknown synthesis tool {args.tool}")
-    progress_bar(progress_actor, specs.size, data_gen_stats_file)
+    progress_bar(pbar, progress_actor, specs.size, data_gen_stats_file)
     ray.get(worker_results)
     samples_queue.put(None)
     ray.get(dataset_writer_result)

@@ -341,7 +341,7 @@ class LTLSpecDataset(Dataset[DecompLTLSpec]):
         path: str,
         ltl_spec_filter=None,
         port: int = 50051,
-        start_container: bool = True,
+        start_containerized_service: bool = True,
         name_as_id: bool = False,
         **kwargs,
     ) -> "LTLSpecDataset":
@@ -351,7 +351,7 @@ class LTLSpecDataset(Dataset[DecompLTLSpec]):
             path=path,
             ltl_spec_filter=ltl_spec_filter,
             port=port,
-            start_container=start_container,
+            start_containerized_service=start_containerized_service,
             name_as_id=name_as_id,
         )
         return cls(dataset=dataset, **kwargs)

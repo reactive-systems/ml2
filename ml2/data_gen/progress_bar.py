@@ -11,11 +11,15 @@ from ..datasets import DatasetWriter
 from .progress_actor import ProgressActor
 
 
-def progress_bar(
-    progress_actor: ProgressActor, num_samples: int, stats_filepath: str = None
-) -> None:
+def progress_bar_init(progress_actor: ProgressActor, num_samples: int) -> tqdm:
     pbar = tqdm(total=num_samples, desc="Generated samples", unit="sample")
     progress_actor.update.remote("samples", 0)
+    return pbar
+
+
+def progress_bar(
+    pbar: tqdm, progress_actor: ProgressActor, num_samples: int, stats_filepath: str = None
+) -> None:
     while True:
         progress = ray.get(progress_actor.wait_for_update.remote())
         pbar.update(progress["samples"] - pbar.n)
