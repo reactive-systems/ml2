@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
 
 from numpy.random import default_rng
 
+from ...datasets.stats import stats
 from ...dtypes import BinaryAST, DecompBinaryExpr, DecompBinaryExprPair
 from ...grpc.ltl import ltl_pb2
 from ...registry import register_type
@@ -377,6 +378,16 @@ class DecompLTLSpec(DecompBinaryExprPair, LTLSpec):
 
     def guarantee_str(self, notation: Optional[str] = None) -> str:
         return self.guarantees.to_str(notation=notation)
+
+    def property_stats(self) -> Dict:
+        """return statistical features of the properties in this sample"""
+        return stats(
+            {
+                "guarantee_size": [p.size() for p in self.guarantees],
+                "assumption_size": [p.size() for p in self.assumptions],
+                "property_size": [p.size() for p in (self.assumptions + self.guarantees)],
+            }
+        )
 
     def rename_aps(
         self,

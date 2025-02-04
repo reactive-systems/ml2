@@ -4,9 +4,11 @@ import argparse
 import copy
 import json
 import logging
+import os
 import os.path
 import re
 import sys
+import time
 from typing import Dict, List
 
 import numpy as np
@@ -15,11 +17,14 @@ from numpy.random import default_rng
 from ray.util.queue import Queue
 
 from ... import aiger
-from ...data_gen import ProgressActor, add_dist_data_gen_args, progress_bar
+from ...artifact import Artifact
+from ...data_gen import ProgressActor, add_dist_data_gen_args, progress_bar, progress_bar_init
+from ...datasets.stats import plot_stats, write_stats
 from ...tools.bosy import add_bosy_args, bosy_worker_fn_dict
 from ...tools.strix import add_strix_args
 from ...tools.strix.strix_worker import strix_worker_fn_dict
-from ..ltl_spec import LTLSpecPatternCSVDataset, LTLSpecPatternDataset
+from ..ltl_spec import LTLSpecPatternCSVDataset
+from . import LTLSynSplitDataset
 from .ltl_syn_data_gen_common import (
     add_ltl_syn_data_gen_args,
     check_lower_bounds,
@@ -27,7 +32,6 @@ from .ltl_syn_data_gen_common import (
     csv_dataset_writer,
     csv_file_writer,
 )
-from .ltl_syn_dataset import LTLSynDataset, LTLSynSplitDataset
 from .ltl_syn_status import LTLSynStatus
 
 ray.init(dashboard_host="0.0.0.0")
@@ -383,7 +387,7 @@ def main(args):
     ]
 
     # create folder and files
-    folder_path = LTLSynDataset.local_path_from_name(args.name, project="ltl-syn")
+    folder_path = Artifact.local_path_from_name(args.name, project="ltl-syn")
     if not os.path.isdir(folder_path):
         os.makedirs(folder_path)
         logger.info("Created folder %s", folder_path)
@@ -420,46 +424,56 @@ def main(args):
     )
     timeouts_file = os.path.join(folder_path, "timeouts.csv")
     timeouts_writer_result = csv_file_writer.remote(timeouts_queue, timeouts_file, args.curriculum)
+    pbar = progress_bar_init(progress_actor, args.num_samples)
     if args.tool == "bosy":
-        worker_results = [
-            bosy_worker_fn_dict.remote(
-                ds_actor,
-                id=i,
-                optimize=args.bosy_optimize,
-                port=50051 + i,
-                timeout=args.bosy_timeout,
+        worker_results = []
+        for i in range(args.num_workers):
+            worker_results.append(
+                bosy_worker_fn_dict.remote(
+                    ds_actor,
+                    id=i,
+                    optimize=args.bosy_optimize,
+                    port=50051 + i,
+                    timeout=args.bosy_timeout,
+                    mem_limit=args.mem_lim_workers,
+                )
             )
-            for i in range(args.num_workers)
-        ]
+            time.sleep(args.sleep_workers)
+
     elif args.tool == "strix":
-        worker_results = [
-            strix_worker_fn_dict.remote(
-                ds_actor,
-                id=i,
-                port=50051 + i,
-                minimize_aiger=args.strix_auto,
-                timeout=args.strix_timeout,
+        worker_results = []
+        for i in range(args.num_workers):
+            worker_results.append(
+                strix_worker_fn_dict.remote(
+                    ds_actor,
+                    id=i,
+                    port=50051 + i,
+                    minimize_aiger=args.strix_auto,
+                    timeout=args.strix_timeout,
+                    mem_limit=args.mem_lim_workers,
+                )
             )
-            for i in range(args.num_workers)
-        ]
+            time.sleep(args.sleep_workers)
     else:
         sys.exit(f"Unknown synthesis tool {args.tool}")
-    progress_bar(progress_actor, args.num_samples, data_gen_stats_file)
+    progress_bar(pbar, progress_actor, args.num_samples, data_gen_stats_file)
     ray.get(worker_results)
     ray.get(dataset_writer_result)
     timeouts_queue.put(None)
     ray.get(timeouts_writer_result)
-    # TODO code below not working anymore
-    # split_dataset = LTLSynSplitDataset.load(args.name, project="ltl-syn")
-    # stats = split_dataset.stats(['train', 'val', 'test'])
-    # stats_file = os.path.join(folder_path, 'circuit-stats.json')
-    # write_stats(stats, stats_file)
-    # plot_file = os.path.join(folder_path, 'circuit-stats.png')
-    # plot_stats(stats, plot_file)
-    # split_dataset.shuffle()
-    # split_dataset.save(
-    #     name=args.name, upload=args.upload, overwrite_local=True, add_to_wandb=args.add_to_wandb
-    # )
+    split_dataset = LTLSynSplitDataset.convert_deprecated(
+        args.name, project="ltl-syn", unsupervised_splits=["timeouts"]
+    )
+    split_dataset.shuffle()
+    for split in ["val", "timeouts"]:
+        ds = split_dataset[split]
+        stats = ds.stats()
+        plot_stats(stats, os.path.join(ds.stats_path, "statistics.png"))
+        write_stats(stats, os.path.join(ds.stats_path, "statistics.json"))
+
+    split_dataset.save(
+        recurse=True, overwrite_local=True, add_to_wandb=args.add_to_wandb, upload=args.upload
+    )
 
 
 if __name__ == "__main__":

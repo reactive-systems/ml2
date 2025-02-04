@@ -115,7 +115,6 @@ class GRPCService(Configurable):
             self.start_container_port(port, **kwargs)
         except docker.errors.APIError as e:
             if "Ports are not available" in str(e) or "port is already allocated" in str(e):
-                print("test")
                 self.start_container(**kwargs)
             else:
                 raise e

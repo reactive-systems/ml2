@@ -26,3 +26,9 @@ def add_dist_data_gen_args(parser):
         "--batch-size", type=int, default=10, help="size of batches provided to worker"
     )
     parser.add_argument("--num-workers", type=int, default=4, help="number of workers")
+    parser.add_argument(
+        "--sleep-workers", type=int, default=0, help="sleep time between worker startup"
+    )
+    parser.add_argument(
+        "--mem-lim-workers", type=str, default="2g", help="Memory limit per worker"
+    )

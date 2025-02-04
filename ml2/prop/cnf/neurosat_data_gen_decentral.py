@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import signal
+import time
 
 import ray
 from ray.util.queue import Queue
@@ -40,8 +41,9 @@ def neurosat_data_gen_worker_fn(
     timeout: float,
     id: int,
     port: int,
+    mem_limit: str,
 ) -> None:
-    booleforce = BooleForce(port=port)
+    booleforce = BooleForce(port=port, mem_limit=mem_limit)
 
     def signal_handler(num, stack):
         raise TimeoutException()
@@ -123,20 +125,23 @@ def main(args):
         progress_actor=progress_actor,
         sample_queue=samples_queue,
     )
-    worker_results = [
-        neurosat_data_gen_worker_fn.remote(
-            server=ds_actor,
-            batch_size=args.batch_size,
-            min_n=args.min_n,
-            max_n=args.max_n,
-            p_k_2=args.p_k_2,
-            p_geo=args.p_geo,
-            timeout=args.timeout,
-            id=i,
-            port=50051 + i,
+    worker_results = []
+    for i in range(args.num_workers):
+        worker_results.append(
+            neurosat_data_gen_worker_fn.remote(
+                server=ds_actor,
+                batch_size=args.batch_size,
+                min_n=args.min_n,
+                max_n=args.max_n,
+                p_k_2=args.p_k_2,
+                p_geo=args.p_geo,
+                timeout=args.timeout,
+                id=i,
+                port=50051 + i,
+                mem_limit=args.mem_lim_workers,
+            )
         )
-        for i in range(args.num_workers)
-    ]
+        time.sleep(args.sleep_workers)
 
     data_writing_progress_bar(
         dataset_writer, progress_actor, samples_queue, args.num_samples, data_gen_stats_file

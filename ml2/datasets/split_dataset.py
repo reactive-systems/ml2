@@ -125,6 +125,6 @@ class SplitDataset(Dataset[T], Generic[T, DT]):
     def split_names(self) -> List[str]:
         return list(self.keys())
 
-    def split_stats(self, **kwargs) -> Dict[str, Any]:
+    def stats(self, **kwargs) -> Dict[str, Any]:
         """Statistics of each split"""
         return {name: split.stats(**kwargs) for name, split in self.items()}

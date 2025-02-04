@@ -280,7 +280,7 @@ def inclusion(
             spot_left = spot.formula(left)
             spot_right = spot.formula(right)
 
-            if lcc.are_equivalent(left, right):
+            if lcc.are_equivalent(spot_left, spot_right):
                 end = time.time()
                 yield "equivalent", end - start
 
