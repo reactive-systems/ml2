@@ -1,6 +1,5 @@
 syntax = "proto3";
 
-
 // Mirrors ml2.ltl.ltl_formula.LTLFormula
 message LTLFormula {
   // Represents an LTL formula as string.
@@ -8,6 +7,23 @@ message LTLFormula {
   string formula = 1;
   // The notation in which the formula is serialized. Infix is default.
   string notation = 2;
+}
+
+// Represents a set of LTL properties.
+// Mirrors ml2.ltl.ltl_spec.ltl_properties.LTLProperties
+message LTLProperties {
+  // All input atomic propositions that occur in guarantees or assumptions. Can
+  // be a superset thereof.
+  repeated string inputs = 1;
+  // All output atomic propositions that occur in guarantees or assumptions.
+  // Can be a superset thereof.
+  repeated string outputs = 2;
+  // The LTL specs that represent each property.
+  repeated LTLSpecification sub_exprs = 3;
+  // The name of the property. Can be arbitrary.
+  optional string name = 4;
+  // The semantics of the property. Usually "mealy" or "moore".
+  optional string semantics = 5;
 }
 
 // Represents a decompositioned LTL specification. Can be composed to an LTL
@@ -21,12 +37,22 @@ message DecompLTLSpecification {
   // All output atomic propositions that occur in guarantees or assumptions.
   // Can be a superset thereof.
   repeated string outputs = 2;
-  // A set of guarantees that make up the specifications. All inputs and outputs
-  // occuring in any guarantee must be part of input/output.
+  // DEPRECATED A set of guarantees that make up the specifications. All inputs
+  // and outputs occurring in any guarantee must be part of input/output.
   repeated LTLFormula guarantees = 3;
-  // A set of assumption that make up the specifications. All inputs and outputs
-  // occuring in any guarantee must be part of input/output.
+  // DEPRECATED A set of assumption that make up the specifications. All inputs
+  // and outputs occurring in any guarantee must be part of input/output.
   repeated LTLFormula assumptions = 4;
+  // A set of guarantees that make up the specifications. All inputs and outputs
+  // occurring in any guarantee must be part of input/output.
+  LTLProperties guarantee_properties = 5;
+  // A set of assumption that make up the specifications. All inputs and outputs
+  // occurring in any guarantee must be part of input/output.
+  LTLProperties assumption_properties = 6;
+  // The semantics of the specification. Usually "mealy" or "moore".
+  optional string semantics = 7;
+  // The name of the specification. Can be arbitrary.
+  optional string name = 8;
 }
 
 // Represents an LTL specification. Not decomposed!
@@ -38,5 +64,10 @@ message LTLSpecification {
   // All output atomic propositions that occur in formula. Can be a superset
   // thereof.
   repeated string outputs = 2;
+  // The LTL formula that represents the specification.
   LTLFormula formula = 3;
+  // The semantics of the specification. Usually "mealy" or "moore".
+  optional string semantics = 4;
+  // The name of the specification. Can be arbitrary.
+  optional string name = 6;
 }

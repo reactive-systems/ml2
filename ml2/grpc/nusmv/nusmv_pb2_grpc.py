@@ -66,7 +66,7 @@ class NuSMVServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def ModelCheckStream(self, request_iterator, context):
-        """Call to model-check a stream of problems. Same order  of problems
+        """Call to model-check a stream of problems. Same order of problems
         and solutions is assumed
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
