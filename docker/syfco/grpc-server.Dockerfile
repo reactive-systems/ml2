@@ -2,7 +2,7 @@ ARG CONTAINER_REGISTRY=ghcr.io/reactive-systems/ml2
 
 FROM $CONTAINER_REGISTRY/syfco
 
-ARG PYTHON_VERSION=3.8.12
+ARG PYTHON_VERSION=3.11.11
 
 RUN apt-get -q update && \
     apt-get -q install -y \

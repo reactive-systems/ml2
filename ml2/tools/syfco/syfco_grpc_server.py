@@ -30,7 +30,7 @@ class SyfcoServicer(syfco_pb2_grpc.SyfcoServicer):
             functionalities=[
                 tools_pb2.FUNCTIONALITY_TLSF_TO_SPEC,
             ],
-            version="1.2.1.2",
+            version="1.2.1.3",
         )
 
     def ConvertTLSFToSpec(self, request, context):

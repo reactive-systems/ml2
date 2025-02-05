@@ -16,13 +16,6 @@ from ...grpc.ltl import ltl_pb2
 from ...registry import register_type
 from ..ltl_formula import LTLFormula
 
-SEMANTICS = ["mealy", "moore"]
-
-
-class LTLSpecSemantics(enum.Enum):
-    MEALY = "mealy"
-    MOORE = "moore"
-
 
 @register_type
 class LTLSpec(LTLFormula):
@@ -129,7 +122,11 @@ class LTLSpec(LTLFormula):
 
     def to_pb2_LTLSpecification(self, **kwargs):
         return ltl_pb2.LTLSpecification(
-            inputs=self.inputs, outputs=self.outputs, formula=self.to_pb2_LTLFormula(**kwargs)
+            inputs=self.inputs,
+            outputs=self.outputs,
+            formula=self.to_pb2_LTLFormula(**kwargs),
+            semantics=self.semantics if self.semantics is not None else "",
+            name=self.name if self.name is not None else "",
         )
 
     @classmethod
@@ -143,6 +140,12 @@ class LTLSpec(LTLFormula):
                 "notation": pb2_LTLSpecification.formula.notation,
                 "inputs": inputs,
                 "outputs": outputs,
+                "semantics": (
+                    pb2_LTLSpecification.semantics
+                    if pb2_LTLSpecification.semantics != ""
+                    else None
+                ),
+                "name": pb2_LTLSpecification.name if pb2_LTLSpecification.name != "" else None,
             },
             **kwargs,
         )

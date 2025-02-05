@@ -18,6 +18,8 @@ def test_ltl_conversion_response_1():
                 "outputs": "o0",
                 "guarantees": "i0 U o0",
                 "assumptions": "F i0,F G i0",
+                "name": "test_name",
+                "semantics": "Mealy",
             }
         ),
         tool="SyFCo",
@@ -28,21 +30,23 @@ def test_ltl_conversion_response_1():
     assert pb2_sol.time.seconds == 1
     assert pb2_sol.time.nanos == 334679000
     assert pb2_sol.error == ""
-    assert pb2_sol.specification.assumptions[0].formula == "F i0"
-    assert pb2_sol.specification.assumptions[0].notation == "infix"
-    assert pb2_sol.specification.assumptions[1].formula == "F G i0"
-    assert pb2_sol.specification.assumptions[1].notation == "infix"
-    assert pb2_sol.specification.guarantees[0].formula == "i0 U o0"
-    assert pb2_sol.specification.guarantees[0].notation == "infix"
+    assert pb2_sol.specification.assumption_properties.sub_exprs[0].formula.formula == "F i0"
+    assert pb2_sol.specification.assumption_properties.sub_exprs[0].formula.notation == "infix"
+    assert pb2_sol.specification.assumption_properties.sub_exprs[1].formula.formula == "F G i0"
+    assert pb2_sol.specification.assumption_properties.sub_exprs[1].formula.notation == "infix"
+    assert pb2_sol.specification.guarantee_properties.sub_exprs[0].formula.formula == "i0 U o0"
+    assert pb2_sol.specification.guarantee_properties.sub_exprs[0].formula.notation == "infix"
     assert pb2_sol.specification.inputs[0] == "i0"
     assert pb2_sol.specification.outputs[0] == "o0"
+    assert pb2_sol.specification.semantics == "Mealy"
+    assert pb2_sol.specification.name == "test_name"
     sol_2 = ToolLTLConversionResponse.from_pb2_ConvertTLSFToSpecResponse(pb2_sol)
     assert sol_2.error == sol.error
     assert sol_2.tool == sol.tool
     assert sol_2.time == sol.time
-    assert sol_2.decomp_specification == sol_2.decomp_specification
-    assert sol_2.formula_specification == sol_2.formula_specification
-    assert sol_2.specification == sol_2.specification
+    assert sol_2.decomp_specification == sol.decomp_specification
+    assert sol_2.formula_specification == sol.formula_specification
+    assert sol_2.specification == sol.specification
     assert sol_2 == sol
 
 
@@ -64,7 +68,7 @@ def test_ltl_conversion_response_2():
     assert sol_2 == sol
 
 
-def test_ltl_mc_problem_1():
+def test_ltl_conversion_1():
     prob = ToolLTLConversionRequest(
         parameters={"foo": "bar", "foo_1": 3},
         tlsf_string='INFO {\n  TITLE:       "Converted TSL Specification: ActionConverter"\n  DESCRIPTION: "TSL specification, which has been converted to TLSF."\n  SEMANTICS:   Mealy\n  TARGET:      Mealy\n}\nMAIN {\n  INPUTS {\n    p0p0iscockpitmode0gamemode;\n    p0p0isscoremode0gamemode;\n    p0p0gt0accz0f1dresetthreshhold1b;\n    p0p0gt0f1dabs0accz1b0f1dshotthreshhold1b;\n    p0p0norotation0gyrox0gyroy0gyroz;\n  }\n\n  OUTPUTS {\n    u0gamestart0gamestart;\n    u0gamestart0f1dbot1b;\n    u0gamestart0f1dtop1b;\n    u0shot0shot;\n    u0shot0f1dbot1b;\n    u0shot0f1dtop1b;\n  }\n\n  GUARANTEE {\n    (G ((! (((u0gamestart0f1dbot1b) && (! ((u0gamestart0f1dtop1b) || (u0gamestart0gamestart)))) <-> ((! (((u0gamestart0f1dtop1b) && (! (u0gamestart0gamestart))) <-> ((u0gamestart0gamestart) && (! (u0gamestart0f1dtop1b))))) && (! (u0gamestart0f1dbot1b))))) && (! (((u0shot0f1dbot1b) && (! ((u0shot0f1dtop1b) || (u0shot0shot)))) <-> ((! (((u0shot0f1dtop1b) && (! (u0shot0shot))) <-> ((u0shot0shot) && (! (u0shot0f1dtop1b))))) && (! (u0shot0f1dbot1b))))))) && ((((G ((u0gamestart0f1dtop1b) || (u0gamestart0f1dbot1b))) && (G ((u0shot0f1dtop1b) || (u0shot0f1dbot1b)))) && (G ((((p0p0isscoremode0gamemode) && (p0p0gt0accz0f1dresetthreshhold1b)) && (p0p0norotation0gyrox0gyroy0gyroz)) <-> (u0gamestart0f1dtop1b)))) && (G ((((p0p0iscockpitmode0gamemode) && (p0p0gt0f1dabs0accz1b0f1dshotthreshhold1b)) && (p0p0norotation0gyrox0gyroy0gyroz)) <-> (u0shot0f1dtop1b))));\n  }\n}\n',
