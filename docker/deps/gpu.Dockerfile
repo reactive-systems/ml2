@@ -21,4 +21,4 @@ RUN pip --no-cache-dir install --upgrade pip
 # Installing backwards-compatible tf-keras package because Transformers does not yet support Keras 3
 RUN pip install tf-keras==2.16
 RUN pip --no-cache-dir install torch --index-url https://download.pytorch.org/whl/cu118
-RUN pip --no-cache-dir install datasets docker google-cloud-storage grpcio jupyter matplotlib nltk numpy packaging pandas ray[default] sly transformers[torch] tqdm wandb
+RUN pip --no-cache-dir install datasets docker google-cloud-storage grpcio jupyter matplotlib nltk numpy pandas ray[default] sly transformers[torch] tqdm wandb
