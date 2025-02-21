@@ -7,8 +7,5 @@ if is_tf_available():
     from .keras_trainer_ddp import KerasTrainerDDP
     from .keras_transformer_trainer import KerasTransformerTrainer
 
-    if is_ray_available():
-        from .callbacks import TuneReporterCallback
-
 if is_hf_available():
     from .hf_seq2seq_trainer import HFSeq2SeqTrainer
