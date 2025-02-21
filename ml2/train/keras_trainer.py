@@ -6,10 +6,10 @@ import os
 from typing import Any, Dict, List
 
 import tensorflow as tf
-import wandb
 from keras.callbacks import Callback
 from keras.optimizers import Optimizer
-from wandb.integration.keras import WandbMetricsLogger
+
+import wandb
 
 from ..datasets import Dataset
 from ..optim.tf_optim import load_tf_optimizer_from_config, tf_optimizer_to_config
@@ -21,6 +21,7 @@ from ..utils.tf_utils import (
     tf_float_dtype_to_str,
     tf_int_dtype_to_str,
 )
+from .keras_callbacks import WandbCallback
 from .trainer import Trainer
 
 logging.basicConfig(level=logging.INFO)
@@ -154,7 +155,7 @@ class KerasTrainer(Trainer):
         super().train()
 
         if self.stream_to_wandb:
-            self.callbacks += [WandbMetricsLogger(log_freq=self.log_freq)]
+            self.callbacks += [WandbCallback(log_freq=self.log_freq)]
 
         train_model = self.pipeline.train_model
         metrics = self.pipeline.default_train_metrics()
