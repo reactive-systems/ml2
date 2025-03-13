@@ -372,12 +372,8 @@ class TFTransformerPipeline(Seq2SeqPipeline[I, T], TFSLPipeline[I, T]):
                 if sample.inp_enc is None:
                     errors.append(sample)
                     continue
-
                 samples.append(sample)
-                if self.custom_pos_enc:
-                    yield (sample.inp_enc[0], sample.inp_enc[1])
-                else:
-                    yield sample.inp_enc
+                yield sample.inp_enc
 
         tf_dataset = tf.data.Dataset.from_generator(
             tensor_generator,
@@ -443,21 +439,23 @@ class TFTransformerPipeline(Seq2SeqPipeline[I, T], TFSLPipeline[I, T]):
 
     def eval_sample(self, x: I, training: bool = False, **kwargs) -> BeamSearchSample:
         sample = self.init_sample(x)
-
         if sample.inp_enc is None:
             return sample
 
         start = time.time()
-        if self.custom_pos_enc:
-            formula_tensor, pos_enc_tensor = sample.inp_enc
-            # pylint: disable=E1102
-
-            preds = self.eval_model(
-                (tf.expand_dims(formula_tensor, axis=0), tf.expand_dims(pos_enc_tensor, axis=0)),
-                training=training,
-            )[0]
+        # add batch dimension
+        if (
+            self.custom_pos_enc
+            or self.attn_mask_1d
+            or self.attn_mask_2d
+            or self.attn_mask_3d
+            or self.attn_mask_4d
+        ):  # input encoding is a tuple of tensors
+            model_inputs = [tf.expand_dims(enc, axis=0) for enc in sample.inp_enc]
         else:
-            preds = self.eval_model(tf.expand_dims(sample.inp_enc, axis=0), training=training)[0]
+            model_inputs = tf.expand_dims(sample.inp_enc, axis=0)
+
+        preds = self.eval_model(model_inputs, training=training)[0]
 
         for beam_id, beam in enumerate(preds[0]):
             # TODO start id hack
@@ -498,12 +496,8 @@ class TFTransformerPipeline(Seq2SeqPipeline[I, T], TFSLPipeline[I, T]):
                 if sample.inp_enc is None or sample.tar_enc is None:
                     errors.append(sample)
                     continue
-
                 samples.append(sample)
-                if self.custom_pos_enc:
-                    yield (sample.inp_enc[0], sample.inp_enc[1])
-                else:
-                    yield sample.inp_enc
+                yield sample.inp_enc
 
         tf_dataset = tf.data.Dataset.from_generator(
             tensor_generator,
