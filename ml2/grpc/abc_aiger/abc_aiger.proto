@@ -1,0 +1,138 @@
+syntax = "proto3";
+
+import "ml2/grpc/tools/tools.proto";
+import "google/protobuf/duration.proto";
+import "ml2/grpc/aiger/aiger.proto";
+
+message ConvertBinaryToAasciRequest {
+  // Defines run- and tool-specific parameters. As Map (Dict in Python).
+  // Typical examples are threads, timeouts etc. Can be empty.
+  map<string, string> parameters = 1;
+  // AIGER circuit in aig (binary) format
+  AigerBinaryCircuit aig = 2;
+}
+
+message ConvertBinaryToAasciResponse {
+  // AIGER circuit in aag (aasci) format
+  optional AigerCircuit aag = 1;
+  // Here additional information should be supplied if something went wrong
+  string error = 2;
+  // Tool that created the response
+  string tool = 3;
+  // How long the tool took to create the result.
+  optional google.protobuf.Duration time = 4;
+}
+
+message ConvertAasciToBinaryRequest {
+  // Defines run- and tool-specific parameters. As Map (Dict in Python).
+  // Typical examples are threads, timeouts etc. Can be empty.
+  map<string, string> parameters = 1;
+  // AIGER circuit in aag (aasci) format
+  AigerCircuit aag = 2;
+}
+
+message ConvertAasciToBinaryResponse {
+  // AIGER circuit in aig (binary) format
+  optional AigerBinaryCircuit aig = 1;
+  // Here additional information should be supplied if something went wrong
+  string error = 2;
+  // Tool that created the response
+  string tool = 3;
+  // How long the tool took to create the result.
+  optional google.protobuf.Duration time = 4;
+}
+
+message ConvertAigerToDotRequest {
+  // Defines run- and tool-specific parameters. As Map (Dict in Python).
+  // Typical examples are threads, timeouts etc. Can be empty.
+  map<string, string> parameters = 1;
+  // An Aiger Circuit in ascii format
+  AigerCircuit aag = 2;
+}
+
+message ConvertAigerToDotResponse {
+  // AIGER circuit in aig (binary) format
+  optional string dot = 1;
+  // Here additional information should be supplied if something went wrong
+  string error = 2;
+  // Tool that created the response
+  string tool = 3;
+  // How long the tool took to create the result.
+  optional google.protobuf.Duration time = 4;
+}
+
+message ConvertDotToSvgResponse {
+  // svg string of the image
+  optional string svg = 1;
+  // Tool that created the response
+  string tool = 3;
+  // How long the tool took to create the result.
+  optional google.protobuf.Duration time = 4;
+}
+
+message ConvertDotRequest {
+  // A dot string
+  string dot = 1;
+}
+
+message ConvertDotToPngResponse {
+  // base64 encoded png image
+  optional string png = 1;
+  // Tool that created the response
+  string tool = 3;
+  // How long the tool took to create the result.
+  optional google.protobuf.Duration time = 4;
+}
+
+message AigerSimplifyRequest {
+  // Defines run- and tool-specific parameters. As Map (Dict in Python).
+  // Typical examples are threads, timeouts etc. Can be empty.
+  map<string, string> parameters = 1;
+  // List of commands to send to ABC that simplify the AIGER circuit
+  // If empty, the KNOR default commands are used
+  repeated string simplify_commands = 2;
+  // An Aiger Circuit in ascii format
+  AigerCircuit aag = 3;
+}
+
+message AigerSimplifyResponse {
+  // AIGER circuit in aag (aasci) format including history, last is most recent
+  repeated AigerCircuit aag = 1;
+  // Here additional information should be supplied if something went wrong
+  string error = 2;
+  // Tool that created the response
+  string tool = 3;
+  // How long the tool took to create the result.
+  optional google.protobuf.Duration time = 4;
+}
+
+// AIGER is a format, library and set of utilities for And-Inverter Graphs
+// (AIGs).
+//  ABC is a software system for synthesis and verification of binary sequential
+//  logic circuits appearing in synchronous hardware designs. ABC combines
+//  scalable logic optimization based on And-Inverter Graphs (AIGs),
+//  optimal-delay DAG-based technology mapping for look-up tables and standard
+//  cells, and innovative algorithms for sequential synthesis and verification.
+service ABCAiger {
+  // Setup call, which is typically called before the first model checking call
+  // has happened.
+  rpc Setup(SetupRequest) returns (SetupResponse) {}
+  // Call to find out the identity and functionality of the server, i.e. the
+  // tool that is running the server and what it is supposed to do.
+  rpc Identify(IdentificationRequest) returns (IdentificationResponse) {}
+  // Call to convert an AIGER circuit from binary to aasci format
+  rpc ConvertBinaryToAasci(ConvertBinaryToAasciRequest)
+      returns (ConvertBinaryToAasciResponse) {}
+  // Call to convert an AIGER circuit from aasci to binary format
+  rpc ConvertAasciToBinary(ConvertAasciToBinaryRequest)
+      returns (ConvertAasciToBinaryResponse) {}
+  // Call to convert an AIGER circuit to a dot format
+  rpc ConvertAigerToDot(ConvertAigerToDotRequest)
+      returns (ConvertAigerToDotResponse) {}
+  // Call to convert a dot string to a svg image
+  rpc ConvertDotToSvg(ConvertDotRequest) returns (ConvertDotToSvgResponse) {}
+  // Call to convert a dot string to a png image
+  rpc ConvertDotToPng(ConvertDotRequest) returns (ConvertDotToPngResponse) {}
+  // Call to simplify an AIGER circuit
+  rpc AigerSimplify(AigerSimplifyRequest) returns (AigerSimplifyResponse) {}
+}

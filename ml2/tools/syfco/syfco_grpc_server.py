@@ -96,7 +96,7 @@ def serve(port: int):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Strix gRPC server")
+    parser = argparse.ArgumentParser(description="Syfco gRPC server")
     parser.add_argument(
         "-p",
         "--port",
