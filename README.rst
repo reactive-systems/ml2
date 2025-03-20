@@ -18,7 +18,7 @@ Requirements
 ------------
 
 - `Docker <https://www.docker.com>`_
-- `Python 3.8 <https://www.python.org/dev/peps/pep-0569/>`_
+- `Python 3.11 <https://peps.python.org/pep-0664/>`_
 
 Note on Docker: For data generation, evaluation, and benchmarking ML2 uses a variety of research tools (e.g. SAT solvers, model checkers, and synthesis tools). For ease of use, each tool is encapsulated in a Docker container that is automatically pulled and started when the tool is needed. Thus, ML2 requires Docker to be installed and running.
 
