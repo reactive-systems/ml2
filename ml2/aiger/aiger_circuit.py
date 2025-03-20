@@ -354,7 +354,7 @@ class AIGERCircuit(CSVWithId, Seq):
             lit = max(self.inputs)
         components = self.latches + self.ands
         if components:
-            lit = max(lit, max([x.lit for x in components]))
+            lit = max(lit, *[x.lit for x in components])
         return lit // 2
 
     @property
@@ -380,6 +380,10 @@ class AIGERCircuit(CSVWithId, Seq):
     @property
     def num_ands(self) -> int:
         return len(self.ands)
+
+    @property
+    def num_gates(self) -> int:
+        return self.num_ands + self.num_latches
 
     @property
     def input_var_ids(self) -> List[int]:
@@ -513,6 +517,15 @@ class AIGERCircuit(CSVWithId, Seq):
         circuit = "aag " + " ".join(tokens)
         circuit = circuit.replace(" <n> ", "\n")
         return cls.from_str(circuit=circuit)
+
+    @classmethod
+    def from_file(cls, filename) -> "AIGERCircuit":
+        with open(filename, "r", encoding="utf-8") as f:
+            return cls.from_str(f.read().strip("\n"))
+
+    def to_file(self, filename) -> None:
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(self.to_str() + "\n")
 
 
 def parser_seq(components):

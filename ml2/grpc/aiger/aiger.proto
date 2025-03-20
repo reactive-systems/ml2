@@ -1,3 +1,5 @@
 syntax = "proto3";
 
 message AigerCircuit { string circuit = 1; }
+
+message AigerBinaryCircuit { string circuit = 1; }

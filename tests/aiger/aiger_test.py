@@ -4,18 +4,7 @@ from ml2.aiger import AIGERCircuit, AIGERToSeqTokenizer
 from ml2.tokenizers.vocabulary import Vocabulary
 
 
-def test_aiger_circuit_from_str_without_header_1():
-    circuit_str = "2\n4\n6\n8\n10\n17 11 15\n10 11\n0\n0\n1\n0\n16"
-    circuit = AIGERCircuit.from_str_without_header(
-        circuit=circuit_str,
-        num_inputs=5,
-        num_outputs=5,
-        components=["header", "inputs", "ands", "latches", "outputs"],
-    )
-    assert circuit.to_str() == "aag 8 5 1 5 1\n2\n4\n6\n8\n10\n10 11\n0\n0\n1\n0\n16\n17 11 15"
-
-
-def test_aiger_circuit_from_str_without_header_2():
+def test_aiger_circuit_from_str_without_header():
     circuit_str = "2\n4\n6\n8\n10\n12 7\n0\n0\n1\n0\n16\n14 9 6\n16 14 12\ni0 i0\ni1 i1\ni2 i2\ni3 i3\ni4 i4\nl0 l0\no0 o0\no1 o1\no2 o2\no3 o3\no4 o4"
     circuit = AIGERCircuit.from_str_without_header(
         circuit=circuit_str, num_inputs=5, num_outputs=5

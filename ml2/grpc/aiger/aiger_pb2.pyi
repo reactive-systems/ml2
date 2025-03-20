@@ -24,3 +24,18 @@ class AigerCircuit(google.protobuf.message.Message):
     def ClearField(self, field_name: typing.Literal["circuit", b"circuit"]) -> None: ...
 
 global___AigerCircuit = AigerCircuit
+
+@typing.final
+class AigerBinaryCircuit(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    CIRCUIT_FIELD_NUMBER: builtins.int
+    circuit: builtins.str
+    def __init__(
+        self,
+        *,
+        circuit: builtins.str = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["circuit", b"circuit"]) -> None: ...
+
+global___AigerBinaryCircuit = AigerBinaryCircuit
