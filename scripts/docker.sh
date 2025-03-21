@@ -2,12 +2,14 @@
 
 REGISTRY="${ML2_CONTAINER_REGISTRY:-ml2}"
 
-help() { echo "Usage: $0 [-h --help] [-m --multi-arch] [--platform <string>] [--push] TOOL [DOCKERFILE_PREFIX]"; }
+help() { echo "Usage: $0 [-h --help] [-m --multi-arch] [--platform <string>] [--push] [--pull] TOOL [DOCKERFILE_PREFIX]"; }
 
 BUILDER="docker build"
 PLATFORM=""
 FILENAME="Dockerfile"
 OUTPUT=""
+DOWNLOAD_DOCKERFILE=false
+PULL=false
 
 POSITIONAL_ARGS=()
 
@@ -21,12 +23,18 @@ while [[ $# -gt 0 ]]; do
             BUILDER="docker buildx build"
             if [[ $PLATFORM == "" ]] ; then PLATFORM="--platform linux/amd64,linux/arm64" ; fi
             ;;
+        -d|--download-dockerfile)
+            DOWNLOAD_DOCKERFILE=true
+            ;;
         --platform)
             PLATFORM="--platform $2"
             shift
             ;;
         --push)
             OUTPUT="--output type=registry"
+            ;;
+        --pull)
+            PULL=true
             ;;
         -*|--*)
             echo "Unknown option $1"
@@ -59,8 +67,15 @@ else
     TAG=$TAG:latest
 fi
 
+
 BUILD_CMD="$BUILDER --build-arg CONTAINER_REGISTRY=$REGISTRY $PLATFORM $OUTPUT -f ../docker/$1/$FILENAME  -t $TAG .."
 
+echo "Building Docker image $TAG from Dockerfile ../docker/$1/$FILENAME"
 echo "Running build command:\n\n$BUILD_CMD\n"
 
 $BUILD_CMD
+
+if [[ $PULL == true ]]; then
+    echo "Pulling Docker image $TAG"
+    docker pull $TAG
+fi

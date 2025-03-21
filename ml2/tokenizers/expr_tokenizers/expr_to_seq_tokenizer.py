@@ -22,4 +22,4 @@ class ExprToSeqTokenizer(ToSeqTokenizer[T], Generic[T]):
         return self.dtype.from_tokens(tokens, notation=self.notation, **kwargs)
 
     def vocabulary_filename(self) -> str:
-        return super().vocabulary_filename() + "-" + self.notation.value
+        return super().vocabulary_filename() + "-" + self.notation

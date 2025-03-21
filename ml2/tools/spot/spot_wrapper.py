@@ -201,9 +201,9 @@ def check_equiv_renaming(formula1: str, formula2: str, result: dict) -> None:
             f.rename(d)
             return f
 
-        spot_f1s = [spot.formula(rename(key_formula, d).to_str("infix")) for d in renames]
+        spot_f1s = [spot.formula(rename(key_formula, d).to_str(notation="infix")) for d in renames]
 
-        spot_f2 = spot.formula(value_formula.to_str("infix"))
+        spot_f2 = spot.formula(value_formula.to_str(notation="infix"))
 
         lcc = spot.language_containment_checker()
 
@@ -280,7 +280,7 @@ def inclusion(
             spot_left = spot.formula(left)
             spot_right = spot.formula(right)
 
-            if lcc.are_equivalent(left, right):
+            if lcc.are_equivalent(spot_left, spot_right):
                 end = time.time()
                 yield "equivalent", end - start
 

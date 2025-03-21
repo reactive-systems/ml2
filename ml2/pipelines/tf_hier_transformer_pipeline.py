@@ -58,6 +58,8 @@ class TFHierTransformerConfig(Configurable):
     num_layers_enc: int = None
     num_layers_enc_d0: int = None
     num_layers_enc_d1: int = None
+    pe_enc: str = "sinusoidal"
+    pe_dec: str = "sinusoidal"
 
     def __post_init__(self):
         if self.d_embed is not None:

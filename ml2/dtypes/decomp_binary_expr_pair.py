@@ -21,7 +21,7 @@ class DecompBinaryExprPair(
     def ast(self) -> BinaryAST:
         return self.comp_ast_pair(self[0].ast, self[1].ast)
 
-    def to_tokens(self, notation: str = None, **kwargs) -> List[str]:
+    def to_tokens(self, *, notation: str = None, **kwargs) -> List[str]:
         if notation is None and self[0]._notation is not None:
             notation = self[0]._notation
         if notation is None and self[1]._notation is not None:
@@ -34,7 +34,7 @@ class DecompBinaryExprPair(
             notation=notation,
         )
 
-    def to_str(self, notation: str = None) -> str:
+    def to_str(self, *, notation: str = None, **kwargs) -> str:
         if notation is None and len(self[0].sub_exprs) > 0:
             notation = self[0].sub_exprs[0]._notation
         if notation is None and len(self[1].sub_exprs) > 0:
@@ -57,12 +57,12 @@ class DecompBinaryExprPair(
         raise NotImplementedError()
 
     @classmethod
-    def from_str(cls, s: str, notation: str = "infix", **kwargs) -> "DecompBinaryExprPair[T]":
+    def from_str(cls, s: str, *, notation: str = "infix", **kwargs) -> "DecompBinaryExprPair[T]":
         raise NotImplementedError()
 
     @classmethod
     def from_tokens(
-        cls, tokens: List[str], notation: str = "infix", **kwargs
+        cls, tokens: List[str], *, notation: str = "infix", **kwargs
     ) -> "DecompBinaryExprPair[T]":
         raise NotImplementedError()
 

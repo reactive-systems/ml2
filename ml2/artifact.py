@@ -198,7 +198,7 @@ class Artifact(Configurable):
 
         bucket_path = cls.bucket_path_from_name(name=name, project=project)
         if not path_exists(bucket_path):
-            raise ValueError(f"{cls.__name__} {name} does not exist in bucket")
+            raise ValueError(f"{cls.__name__} {name} does not exist in bucket {ML2_BUCKET}")
         logger.info("Downloading %s", cls.WANDB_TYPE)
         download_path(bucket_path=bucket_path, local_path=local_path)
         logger.debug("Downloaded %s %s to %s", cls.WANDB_TYPE, name, local_path)

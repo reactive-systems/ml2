@@ -6,9 +6,9 @@ import logging
 import os
 
 import pandas as pd
+from google.api_core.exceptions import PreconditionFailed
 from google.auth.exceptions import DefaultCredentialsError
 from google.cloud import storage
-from google.resumable_media import InvalidResponse
 
 from .globals import ML2_BUCKET
 
@@ -37,17 +37,19 @@ def create_latest_version_dummy(
     storage_client = create_client()
     bucket = storage_client.bucket(bucket_name)
     while not success:
-        name = auto_version(name=name, project=project, bucket_name=bucket_name)
+        versioned_name = auto_version(name=name, project=project, bucket_name=bucket_name)
         # add slash to emulate folder
-        bucket_path = (f"{project}/{name}" if project is not None else name) + "/"
+        bucket_path = (
+            f"{project}/{versioned_name}" if project is not None else versioned_name
+        ) + "/"
         blob = bucket.blob(bucket_path)
         try:
             blob.upload_from_string("", if_generation_match=0)
-        except InvalidResponse:
+        except PreconditionFailed:
             success = False
         else:
             success = True
-    return name
+    return versioned_name
 
 
 def latest_version(bucket_dir: str, name: str, bucket_name: str = ML2_BUCKET) -> int:

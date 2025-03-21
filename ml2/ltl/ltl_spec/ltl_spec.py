@@ -16,13 +16,6 @@ from ...grpc.ltl import ltl_pb2
 from ...registry import register_type
 from ..ltl_formula import LTLFormula
 
-SEMANTICS = ["mealy", "moore"]
-
-
-class LTLSpecSemantics(enum.Enum):
-    MEALY = "mealy"
-    MOORE = "moore"
-
 
 @register_type
 class LTLSpec(LTLFormula):
@@ -37,8 +30,8 @@ class LTLSpec(LTLFormula):
         semantics: str = None,
         tokens: List[str] = None,
     ):
-        self.inputs = inputs if inputs else []
-        self.outputs = outputs if outputs else []
+        self.inputs: List[str] = inputs if inputs else []
+        self.outputs: List[str] = outputs if outputs else []
         self.name = name
         self.semantics = semantics
 
@@ -64,7 +57,7 @@ class LTLSpec(LTLFormula):
             hashlib.sha3_224(
                 str(
                     (
-                        self.to_str("prefix"),
+                        self.to_str(notation="prefix"),
                         self.semantics,
                         sorted([i for i in self.inputs]),
                         sorted([o for o in self.outputs]),
@@ -98,6 +91,11 @@ class LTLSpec(LTLFormula):
         """Number of outputs"""
         return len(self.outputs)
 
+    @property
+    def num_aps(self) -> int:
+        """Number of atomic propositions"""
+        return self.num_inputs + self.num_outputs
+
     def deduce_inputs(self, inputs: Optional[List[str]] = None) -> List[str]:
         if inputs is None:
             assert self.inputs is not None
@@ -124,7 +122,11 @@ class LTLSpec(LTLFormula):
 
     def to_pb2_LTLSpecification(self, **kwargs):
         return ltl_pb2.LTLSpecification(
-            inputs=self.inputs, outputs=self.outputs, formula=self.to_pb2_LTLFormula(**kwargs)
+            inputs=self.inputs,
+            outputs=self.outputs,
+            formula=self.to_pb2_LTLFormula(**kwargs),
+            semantics=self.semantics if self.semantics is not None else "",
+            name=self.name if self.name is not None else "",
         )
 
     @classmethod
@@ -138,6 +140,12 @@ class LTLSpec(LTLFormula):
                 "notation": pb2_LTLSpecification.formula.notation,
                 "inputs": inputs,
                 "outputs": outputs,
+                "semantics": (
+                    pb2_LTLSpecification.semantics
+                    if pb2_LTLSpecification.semantics != ""
+                    else None
+                ),
+                "name": pb2_LTLSpecification.name if pb2_LTLSpecification.name != "" else None,
             },
             **kwargs,
         )
@@ -235,7 +243,7 @@ class LTLSpec(LTLFormula):
         if self.name is not None:
             d["name"] = self.name
         if notation is not None:
-            d["notation"] = notation.value
+            d["notation"] = notation
         if self.semantics is not None:
             d["semantics"] = self.semantics
         return d

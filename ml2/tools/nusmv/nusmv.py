@@ -14,6 +14,7 @@ from ...grpc.tools.tools_pb2 import SetupRequest
 from ...ltl.ltl_mc import LTLMCSolution, LTLMCStatus
 from ...ltl.ltl_spec import DecompLTLSpec
 from ...ltl.ltl_syn import LTLRealStatus
+from ...registry import register_type
 from ...verifier.verifier import Verifier
 from ..grpc_service import GRPCService
 from ..ltl_tool.tool_ltl_mc_problem import ToolLTLMCProblem, ToolLTLMCSolution
@@ -78,6 +79,7 @@ class NuSMV(GRPCService):
             yield ToolLTLMCSolution.from_pb2_LTLMCSolution(solution)
 
 
+@register_type
 class NuSMVMC(NuSMV, Verifier):
     def verify(
         self,

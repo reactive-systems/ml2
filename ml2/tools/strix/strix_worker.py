@@ -64,7 +64,7 @@ def strix_worker_fn_dict(
                 timeout=timeout,
             )
             status = solution.status
-            circuit = solution.circuit.to_str()
+            circuit = solution.circuit.to_str() if solution.circuit is not None else ""
             time = solution.time
             problem_dict.update({"status": status, "circuit": circuit, "syn_time": time})
         ray.get(ds_server.post_solved_problems.remote(problems))

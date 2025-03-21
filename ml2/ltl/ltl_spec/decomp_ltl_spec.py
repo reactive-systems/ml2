@@ -4,11 +4,13 @@ import hashlib
 import json
 import ntpath
 from copy import deepcopy
+from itertools import chain
 from random import sample
-from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union
+from typing import Any, Dict, List, Literal, Optional, Self, Type, TypeVar, Union
 
 from numpy.random import default_rng
 
+from ...datasets.stats import stats
 from ...dtypes import BinaryAST, DecompBinaryExpr, DecompBinaryExprPair
 from ...grpc.ltl import ltl_pb2
 from ...registry import register_type
@@ -35,6 +37,13 @@ class LTLProperties(DecompBinaryExpr, LTLSpec):
         self.semantics = semantics
 
         DecompBinaryExpr.__init__(self, sub_exprs=sub_exprs)
+
+    @classmethod
+    def join(cls: Type[T], *guarantees: T) -> T:
+        inputs = list(set(chain(*[g.inputs for g in guarantees])))
+        outputs = list(set(chain(*[g.outputs for g in guarantees])))
+        sub_exprs = list(chain(*[g.sub_exprs for g in guarantees]))
+        return cls(sub_exprs=sub_exprs, inputs=inputs, outputs=outputs)
 
     @property
     def cr_hash(self) -> int:
@@ -105,7 +114,7 @@ class LTLProperties(DecompBinaryExpr, LTLSpec):
         if self.name is not None:
             fields["name"] = self.name
         if notation is not None:
-            fields["notation"] = notation.value
+            fields["notation"] = notation
         if self.semantics is not None:
             fields["semantics"] = self.semantics
         return fields
@@ -128,20 +137,22 @@ class LTLProperties(DecompBinaryExpr, LTLSpec):
     @classmethod
     def from_dict(cls: Type[T], d: Dict[str, Any], **kwargs) -> T:
         return cls(
-            sub_exprs=[
-                LTLSpec.from_dict(
-                    d={
-                        "formula": a,
-                        "inputs": d["inputs"],
-                        "outputs": d["outputs"],
-                        "notation": d.get("notation", "infix"),
-                        "semantics": d.get("semantics", None),
-                    },
-                )
-                for a in d["properties"]
-            ]
-            if "properties" in d and d["properties"] is not None
-            else None,
+            sub_exprs=(
+                [
+                    LTLSpec.from_dict(
+                        d={
+                            "formula": a,
+                            "inputs": d["inputs"],
+                            "outputs": d["outputs"],
+                            "notation": d.get("notation", "infix"),
+                            "semantics": d.get("semantics", None),
+                        },
+                    )
+                    for a in d["properties"]
+                ]
+                if "properties" in d and d["properties"] is not None
+                else None
+            ),
             inputs=d["inputs"],
             outputs=d["outputs"],
             name=d.get("name", None),
@@ -179,6 +190,32 @@ class LTLProperties(DecompBinaryExpr, LTLSpec):
         else:
             raise ValueError(f"Unknown notation {notation}")
 
+    def to_pb2_LTLProperties(self, **kwargs):
+        return ltl_pb2.LTLProperties(
+            inputs=self.inputs,
+            outputs=self.outputs,
+            sub_exprs=[sub.to_pb2_LTLSpecification(**kwargs) for sub in self.sub_exprs],
+            semantics=self.semantics if self.semantics is not None else "",
+            name=self.name if self.name is not None else "",
+        )
+
+    @classmethod
+    def from_pb2_LTLProperties(cls, pb2_LTLProperties, **kwargs) -> Self:
+        inputs = [str(i) for i in pb2_LTLProperties.inputs]
+        outputs = [str(o) for o in pb2_LTLProperties.outputs]
+
+        sub_exprs = [
+            LTLSpec.from_pb2_LTLSpecification(a, **kwargs) for a in pb2_LTLProperties.sub_exprs
+        ]
+
+        return cls(
+            sub_exprs=sub_exprs,
+            inputs=inputs,
+            outputs=outputs,
+            semantics=(pb2_LTLProperties.semantics if pb2_LTLProperties.semantics != "" else None),
+            name=(pb2_LTLProperties.name if pb2_LTLProperties.name != "" else None),
+        )
+
 
 @register_type
 class LTLAssumptions(LTLProperties):
@@ -191,7 +228,7 @@ class LTLAssumptions(LTLProperties):
         if self.name is not None:
             fields["name"] = self.name
         if notation is not None:
-            fields["notation"] = notation.value
+            fields["notation"] = notation
         if self.semantics is not None:
             fields["semantics"] = self.semantics
         return fields
@@ -214,20 +251,22 @@ class LTLAssumptions(LTLProperties):
     @classmethod
     def from_dict(cls, d: Dict[str, Any], **kwargs) -> "LTLAssumptions":
         return cls(
-            sub_exprs=[
-                LTLSpec.from_dict(
-                    d={
-                        "formula": a,
-                        "inputs": d["inputs"],
-                        "outputs": d["outputs"],
-                        "notation": d.get("notation", "infix"),
-                        "semantics": d.get("semantics", None),
-                    },
-                )
-                for a in d["assumptions"]
-            ]
-            if "assumptions" in d and d["assumptions"] is not None
-            else None,
+            sub_exprs=(
+                [
+                    LTLSpec.from_dict(
+                        d={
+                            "formula": a,
+                            "inputs": d["inputs"],
+                            "outputs": d["outputs"],
+                            "notation": d.get("notation", "infix"),
+                            "semantics": d.get("semantics", None),
+                        },
+                    )
+                    for a in d["assumptions"]
+                ]
+                if "assumptions" in d and d["assumptions"] is not None
+                else None
+            ),
             inputs=d["inputs"],
             outputs=d["outputs"],
             name=d.get("name", None),
@@ -246,7 +285,7 @@ class LTLGuarantees(LTLProperties):
         if self.name is not None:
             fields["name"] = self.name
         if notation is not None:
-            fields["notation"] = notation.value
+            fields["notation"] = notation
         if self.semantics is not None:
             fields["semantics"] = self.semantics
         return fields
@@ -269,20 +308,22 @@ class LTLGuarantees(LTLProperties):
     @classmethod
     def from_dict(cls, d: Dict[str, Any], **kwargs) -> "LTLGuarantees":
         return cls(
-            sub_exprs=[
-                LTLSpec.from_dict(
-                    d={
-                        "formula": g,
-                        "inputs": d["inputs"],
-                        "outputs": d["outputs"],
-                        "notation": d.get("notation", "infix"),
-                        "semantics": d.get("semantics", None),
-                    },
-                )
-                for g in d["guarantees"]
-            ]
-            if "guarantees" in d and d["guarantees"] is not None
-            else None,
+            sub_exprs=(
+                [
+                    LTLSpec.from_dict(
+                        d={
+                            "formula": g,
+                            "inputs": d["inputs"],
+                            "outputs": d["outputs"],
+                            "notation": d.get("notation", "infix"),
+                            "semantics": d.get("semantics", None),
+                        },
+                    )
+                    for g in d["guarantees"]
+                ]
+                if "guarantees" in d and d["guarantees"] is not None
+                else None
+            ),
             inputs=d["inputs"],
             outputs=d["outputs"],
             name=d.get("name", None),
@@ -292,6 +333,7 @@ class LTLGuarantees(LTLProperties):
 
 @register_type
 class DecompLTLSpec(DecompBinaryExprPair, LTLSpec):
+
     def __init__(
         self,
         assumptions: LTLAssumptions,
@@ -307,6 +349,16 @@ class DecompLTLSpec(DecompBinaryExprPair, LTLSpec):
         self.semantics = semantics
 
         DecompBinaryExprPair.__init__(self, fst=assumptions, snd=guarantees)
+
+    @classmethod
+    def join_guarantees(cls, *specs: "DecompLTLSpec") -> "DecompLTLSpec":
+        assert len(specs) > 0
+        assert all(x.assumptions == specs[0].assumptions for x in specs)
+        assumptions = specs[0].assumptions
+        inputs: List[str] = list(set(chain(*[s.inputs for s in specs])))
+        outputs: List[str] = list(set(chain(*[s.outputs for s in specs])))
+        guarantees = LTLGuarantees.join(*[s.guarantees for s in specs])
+        return cls(assumptions, guarantees, inputs, outputs)
 
     @property
     def unique_mod_aps(self) -> int:
@@ -353,6 +405,16 @@ class DecompLTLSpec(DecompBinaryExprPair, LTLSpec):
 
     def guarantee_str(self, notation: Optional[str] = None) -> str:
         return self.guarantees.to_str(notation=notation)
+
+    def property_stats(self) -> Dict:
+        """return statistical features of the properties in this sample"""
+        return stats(
+            {
+                "guarantee_size": [p.size() for p in self.guarantees],
+                "assumption_size": [p.size() for p in self.assumptions],
+                "property_size": [p.size() for p in (self.assumptions + self.guarantees)],
+            }
+        )
 
     def rename_aps(
         self,
@@ -417,7 +479,7 @@ class DecompLTLSpec(DecompBinaryExprPair, LTLSpec):
         if self.name is not None:
             fields["name"] = self.name
         if notation is not None:
-            fields["notation"] = notation.value
+            fields["notation"] = notation
         if self.semantics is not None:
             fields["semantics"] = self.semantics
         return fields
@@ -432,14 +494,6 @@ class DecompLTLSpec(DecompBinaryExprPair, LTLSpec):
             bosy_input["assumptions"] = [a.to_str() for a in self.assumptions]
             bosy_input["guarantees"] = [g.to_str() for g in self.guarantees]
             json.dump(bosy_input, bosy_file, indent=2)
-
-    def to_pb2_DecompLTLSpecification(self, **kwargs):
-        return ltl_pb2.DecompLTLSpecification(
-            inputs=self.inputs,
-            outputs=self.outputs,
-            guarantees=[g.to_pb2_LTLFormula(**kwargs) for g in self.guarantees],
-            assumptions=[a.to_pb2_LTLFormula(**kwargs) for a in self.assumptions],
-        )
 
     def to_tlsf_file(self, filepath: str) -> None:
         with open(filepath, "w") as tlsf_file:
@@ -549,12 +603,14 @@ class DecompLTLSpec(DecompBinaryExprPair, LTLSpec):
         with open(filepath, "r") as spec_file:
             return cls.from_bosy_str(
                 bosy_str=spec_file.read(),
-                name=ntpath.basename(filepath)[:-5]
-                if ntpath.basename(filepath).endswith(".json")
-                else (
-                    ntpath.basename(filepath)[:-4]
-                    if ntpath.basename(filepath).endswith(".ltl")
-                    else ntpath.basename(filepath)
+                name=(
+                    ntpath.basename(filepath)[:-5]
+                    if ntpath.basename(filepath).endswith(".json")
+                    else (
+                        ntpath.basename(filepath)[:-4]
+                        if ntpath.basename(filepath).endswith(".ltl")
+                        else ntpath.basename(filepath)
+                    )
                 ),
             )
 
@@ -591,6 +647,22 @@ class DecompLTLSpec(DecompBinaryExprPair, LTLSpec):
             semantics=d.get("semantics", None),
         )
 
+    def to_pb2_DecompLTLSpecification(self, **kwargs):
+        return ltl_pb2.DecompLTLSpecification(
+            inputs=self.inputs,
+            outputs=self.outputs,
+            guarantee_properties=self.guarantees.to_pb2_LTLProperties(**kwargs),
+            assumption_properties=self.assumptions.to_pb2_LTLProperties(**kwargs),
+            guarantees=[
+                g.to_pb2_LTLFormula(**kwargs) for g in self.guarantees
+            ],  # DEPRECATED, remove once all GRPCServers are updated
+            assumptions=[
+                a.to_pb2_LTLFormula(**kwargs) for a in self.assumptions
+            ],  # DEPRECATED, remove once all GRPCServers are updated
+            semantics=self.semantics if self.semantics is not None else "",
+            name=self.name if self.name is not None else "",
+        )
+
     @classmethod
     def from_pb2_DecompLTLSpecification(
         cls, pb2_DecompLTLSpecification, **kwargs
@@ -598,41 +670,68 @@ class DecompLTLSpec(DecompBinaryExprPair, LTLSpec):
         inputs = [str(i) for i in pb2_DecompLTLSpecification.inputs]
         outputs = [str(o) for o in pb2_DecompLTLSpecification.outputs]
 
-        assumptions = LTLAssumptions(
-            sub_exprs=[
-                LTLSpec.from_dict(
-                    {
-                        "formula": a.formula,
-                        "inputs": inputs,
-                        "outputs": outputs,
-                        "notation": a.notation,
-                    },
-                    **kwargs,
-                )
-                for a in pb2_DecompLTLSpecification.assumptions
-            ],
+        if pb2_DecompLTLSpecification.HasField(
+            "assumption_properties"
+        ) and pb2_DecompLTLSpecification.HasField("guarantee_properties"):
+
+            assumptions = LTLAssumptions.from_pb2_LTLProperties(
+                pb2_DecompLTLSpecification.assumption_properties, **kwargs
+            )
+
+            guarantees = LTLGuarantees.from_pb2_LTLProperties(
+                pb2_DecompLTLSpecification.guarantee_properties, **kwargs
+            )
+
+        else:
+            # COMPATIBILITY DEPRECATED: remove once all GRPCServers are updated
+            assumptions = LTLAssumptions(
+                sub_exprs=[
+                    LTLSpec.from_dict(
+                        {
+                            "formula": a.formula,
+                            "inputs": inputs,
+                            "outputs": outputs,
+                            "notation": a.notation,
+                        },
+                        **kwargs,
+                    )
+                    for a in pb2_DecompLTLSpecification.assumptions
+                ],
+                inputs=inputs,
+                outputs=outputs,
+            )
+
+            guarantees = LTLGuarantees(
+                sub_exprs=[
+                    LTLSpec.from_dict(
+                        {
+                            "formula": g.formula,
+                            "inputs": inputs,
+                            "outputs": outputs,
+                            "notation": g.notation,
+                        },
+                        **kwargs,
+                    )
+                    for g in pb2_DecompLTLSpecification.guarantees
+                ],
+                inputs=inputs,
+                outputs=outputs,
+            )
+
+        return cls(
+            assumptions=assumptions,
+            guarantees=guarantees,
             inputs=inputs,
             outputs=outputs,
+            semantics=(
+                pb2_DecompLTLSpecification.semantics
+                if pb2_DecompLTLSpecification.semantics != ""
+                else None
+            ),
+            name=(
+                pb2_DecompLTLSpecification.name if pb2_DecompLTLSpecification.name != "" else None
+            ),
         )
-
-        guarantees = LTLGuarantees(
-            sub_exprs=[
-                LTLSpec.from_dict(
-                    {
-                        "formula": g.formula,
-                        "inputs": inputs,
-                        "outputs": outputs,
-                        "notation": g.notation,
-                    },
-                    **kwargs,
-                )
-                for g in pb2_DecompLTLSpecification.guarantees
-            ],
-            inputs=inputs,
-            outputs=outputs,
-        )
-
-        return cls(assumptions=assumptions, guarantees=guarantees, inputs=inputs, outputs=outputs)
 
     @staticmethod
     def comp_ast_pair(ast1: BinaryAST, ast2: BinaryAST) -> BinaryAST:

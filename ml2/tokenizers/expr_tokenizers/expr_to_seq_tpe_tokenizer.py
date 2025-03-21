@@ -25,4 +25,4 @@ class ExprToSeqTPETokenizer(ToSeqTPETokenizer[T], Generic[T]):
         return data.ast.tree_positional_encoding(notation=self.notation, format=self.tpe_format)
 
     def vocabulary_filename(self) -> str:
-        return super().vocabulary_filename() + "-" + self.notation.value
+        return super().vocabulary_filename() + "-" + self.notation

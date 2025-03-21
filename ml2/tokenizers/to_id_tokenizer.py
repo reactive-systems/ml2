@@ -1,6 +1,5 @@
 """Tokenizer that encodes into an index"""
 
-
 from abc import abstractmethod
 from typing import Generator, Generic, List, Set, TypeVar
 
@@ -34,7 +33,7 @@ class ToIdTokenizer(Tokenizer[T], Generic[T]):
         raise NotImplementedError()
 
     def decode(self, idx: int, **kwargs) -> T:
-        token = self.vocabulary.id_to_token(idx)
+        token = self.vocabulary.id_to_token[idx]
         return self.decode_token(token, **kwargs)
 
     def decode_tf(self, encoding: tf.Tensor, **kwargs) -> T:

@@ -82,7 +82,7 @@ class LTLMCSolution(CSVWithId, CSVLoggableValidationResult, CatSeq[LTLMCStatus, 
     @classmethod
     def _from_csv_fields(cls, fields: Dict[str, str], **kwargs) -> "LTLMCSolution":
         status = LTLMCStatus.from_csv_fields(fields, **kwargs)  # type: ignore
-        trace = Trace.from_csv_fields(fields, **kwargs)  # type: ignore
+        trace = Trace.from_csv_fields(fields, **kwargs) if fields["trace"] != "" else None  # type: ignore
         time = float(fields["mc_time"]) if "mc_time" in fields else None
         tool = fields["mc_tool"] if "mc_tool" in fields else None
         return cls(status=status, trace=trace, time=time, tool=tool)

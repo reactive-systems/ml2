@@ -112,12 +112,21 @@ class HierarchicalTransformer(tf.keras.Model):
         self.encoder_embedding = tf.keras.layers.Embedding(
             params["input_vocab_size"], params["d_embed_enc"]
         )
-        # encoder_positional_encoding_d1 = pe.positional_encoding(
-        #    params['input_length'][1], params['d_embed_enc'])
-        # self.encoder_positional_encoding = tf.repeat(
-        #    tf.expand_dims(encoder_positional_encoding_d1, axis=0),
-        #    repeats=[params['input_length'][0]],
-        #    axis=0)
+        if params["pe_enc"] == "sinusoidal":
+            encoder_positional_encoding_d1 = pe.positional_encoding(
+                params["input_length"][1], params["d_embed_enc"]
+            )
+            self.encoder_positional_encoding = tf.repeat(
+                tf.expand_dims(encoder_positional_encoding_d1, axis=1),
+                repeats=[params["input_length"][0]],
+                axis=1,
+            )
+        elif params["pe_enc"] is None:
+            self.encoder_positional_encoding = tf.zeros(
+                (1, params["input_length"][0], params["input_length"][1], params["d_embed_enc"])
+            )
+        else:
+            raise ValueError(f"Unsupported encoder positional encoding {params['pe_enc']}")
         self.encoder_dropout = tf.keras.layers.Dropout(params["dropout_enc"])
 
         self.encoder_stack_d0 = TransformerEncoder(
@@ -144,9 +153,16 @@ class HierarchicalTransformer(tf.keras.Model):
         self.decoder_embedding = tf.keras.layers.Embedding(
             params["target_vocab_size"], params["d_embed_dec"]
         )
-        self.decoder_positional_encoding = pe.positional_encoding(
-            params["max_decode_length"], params["d_embed_dec"]
-        )
+        if params["pe_dec"] == "sinusoidal":
+            self.decoder_positional_encoding = pe.positional_encoding(
+                params["max_decode_length"], params["d_embed_dec"]
+            )
+        elif params["pe_dec"] is None:
+            self.decoder_positional_encoding = tf.zeros(
+                (1, params["max_decode_length"], params["d_embed_dec"])
+            )
+        else:
+            raise ValueError(f"Unsupported decoder positional encoding {params['pe_dec']}")
         self.decoder_dropout = tf.keras.layers.Dropout(params["dropout_dec"])
 
         self.decoder_stack = TransformerDecoder(
@@ -186,10 +202,8 @@ class HierarchicalTransformer(tf.keras.Model):
         if "positional_encoding" in inputs:
             positional_encoding = inputs["positional_encoding"]
         else:
-            raise NotImplementedError()
-            # seq_len = tf.shape(input)[1]
-            # positional_encoding = self.encoder_positional_encoding[:, :
-            #                                                       seq_len, :]
+            seq_len = tf.shape(input)[1]
+            positional_encoding = self.encoder_positional_encoding[:, :seq_len, :, :]
 
         encoder_output, enc_attn_weights_local, enc_attn_weights_global = self.encode(
             input, input_padding_mask, positional_encoding, training

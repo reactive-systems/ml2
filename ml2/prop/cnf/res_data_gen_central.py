@@ -4,12 +4,19 @@ import argparse
 import json
 import logging
 import os
+import time
 from typing import List, Optional
 
 import ray
 from ray.util.queue import Queue
 
-from ...data_gen import CountingDataGenServer, ProgressActor, add_dist_data_gen_args, progress_bar
+from ...data_gen import (
+    CountingDataGenServer,
+    ProgressActor,
+    add_dist_data_gen_args,
+    progress_bar,
+    progress_bar_init,
+)
 from ...datasets import CSVDatasetWriter, SplitDatasetWriter, load_dataset
 from ...tools.booleforce import booleforce_worker_fn
 from ..prop_sat_status import PropSatStatus
@@ -96,6 +103,7 @@ def main(args):
     progress_actor = ProgressActor.remote()  # pylint: disable=no-member
     samples_queue = Queue(maxsize=args.num_samples)
     # pylint: disable=no-member
+    pbar = progress_bar_init(progress_actor, args.num_samples)
     ds_actor = ResolutionDataGenServer.remote(
         min_n=args.min_n,
         max_n=args.max_n,
@@ -107,11 +115,18 @@ def main(args):
         num_samples=args.num_samples,
         sample_queue=samples_queue,
     )
-    worker_results = [
-        booleforce_worker_fn.remote(ds_actor, id=i, port=50051 + i)
-        for i in range(args.num_workers)
-    ]
-    progress_bar(progress_actor, args.num_samples, data_gen_stats_file)
+    worker_results = []
+    for i in range(args.num_workers):
+        worker_results.append(
+            booleforce_worker_fn.remote(
+                ds_actor,
+                id=i,
+                port=50051 + i,
+                mem_limit=args.mem_lim_workers,
+            )
+        )
+        time.sleep(args.sleep_workers)
+    progress_bar(pbar, progress_actor, args.num_samples, data_gen_stats_file)
     counter = 0
     while counter < args.num_samples:
         sample = samples_queue.get(block=True)
