@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 ARG SPOT_VERSION=2.11.6
 
@@ -12,7 +12,7 @@ RUN export DEBIAN_FRONTEND=noninteractive && \
 RUN wget http://www.lrde.epita.fr/dload/spot/spot-$SPOT_VERSION.tar.gz && \
     tar xzf spot-$SPOT_VERSION.tar.gz && \
     cd spot-$SPOT_VERSION && \
-    ./configure --with-pythondir=/usr/local/lib/python3.10/dist-packages && \
+    ./configure --with-pythondir=/usr/local/lib/python3.12/dist-packages && \
     make && \
     make install && \
     cd / && \
