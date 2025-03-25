@@ -69,26 +69,3 @@ message ClausalProofCheckProblem {
 message ResProof {
     repeated ResClause proof = 1;
 }
-
-// resolution proof checking problem
-// in contrast to the clausal proof checking problem the cnf sat problem is part
-// of the proof
-message ResProofCheckProblem {
-    repeated ResClause proof = 1;
-    float timeout = 2;
-}
-
-// solution to a resolution proof checking problem
-message ResProofCheckSolution { string status = 1; }
-
-// clausal proof checking problem
-message ClausalProofCheckProblem {
-    CNFFormula formula = 1;
-    repeated Clause proof = 2;
-    float timeout = 3;
-}
-
-// resolution proof
-message ResProof {
-    repeated ResClause proof = 1;
-}
