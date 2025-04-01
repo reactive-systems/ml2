@@ -2,21 +2,9 @@
 ML2 - Machine Learning for Mathematics and Logics
 """
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
-from . import (
-    aiger,
-    datasets,
-    dtypes,
-    grpc,
-    layers,
-    ltl,
-    models,
-    optim,
-    prop,
-    tools,
-    trace,
-)
+from . import aiger, datasets, dtypes, grpc, layers, ltl, models, optim, prop, tools, trace
 from .loading import load_artifact as load
 from .utils import is_pt_available, is_ray_available, is_tf_available
 
